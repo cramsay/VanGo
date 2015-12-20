@@ -33,9 +33,9 @@ void trackInit(void);
  *  Tells the module the direction the wheels are being turned
  *  This lets the tracking be as simple as possible
  *  
- *  Directions control increment of positions and velocity signs
- *    Forward = 1
- *    Backward = -1
+ *  Directions control increment of positions and velocity signs.
+ *  Any non-negative parameter is considered "forward", otherwise
+ *  treated as "reverse"
  */
 void trackSetDir(int x, int y);
 

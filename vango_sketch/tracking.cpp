@@ -133,10 +133,10 @@ void trackInit(void){
 
 
 void trackSetDir(int x, int y){
-  ir_ic[X].dir=x;
-  ir_in[X].dir=x;
-  ir_ic[Y].dir=y;
-  ir_in[Y].dir=y;
+  ir_ic[X].dir=x<0?-1:1;
+  ir_in[X].dir=x<0?-1:1;
+  ir_ic[Y].dir=y<0?-1:1;
+  ir_in[Y].dir=y<0?-1:1;
 
   return;
 }
