@@ -24,6 +24,22 @@
  *      needed due to unavailability of input capture pins on the
  *      Arduino Mega. See WheelSensorIN struct for new functionality.
  *      
+ * 0.3) Functionally the same as 0.2, but I've introduced some inheritance
+ * 	to the structs for the IR sensors. The sensors connected via the
+ * 	input capture units include all the functionality and state of
+ * 	the interrupt driven sensors - with some added timer state and
+ * 	config. How do we bodge inheritance in C? We ensure the memory layout
+ * 	of the start of the struct of the "subclass" is the same as that
+ * 	of the superclass. This is as easy as ensuring the first element
+ * 	in the subclass is a superclass struct! Now we can cast upwards
+ * 	from sub to super and treat input capture based sensors as standard
+ * 	interrupt sensors when it suits us. Why not use c++ here instead?
+ * 	...We're purists(?)
+ *
+ * 	Ideally we would define the entire configuration through these
+ * 	structs to make modification easy, but this makes generating
+ * 	the ISRs in a low overhead way a little tricky. Maybe something
+ * 	for the future though.
  */
 
 
@@ -33,73 +49,77 @@
 #include "tracking.h"
 #include "Arduino.h"
 
+#define NUM_IR 4  // Number of attached IR sensors
 #define NUM_IR_IC 2  // Number of attached IR sensors via input capture
-#define NUM_IR_IN 2  // Number of attached IR sensors via standard interrupts
 
-#define X 0
-#define Y 1
+#define X1 0
+#define Y1 1
+#define X2 2
+#define Y2 3
 
+#define IS_X(i) ((i)%2)==0
+#define IS_Y(i) !IS_X(i)
 
-/* Internal structure to generalise IR sensors
- * attached via Timer/Counter Input Capture units
+/* Internal structure for ALL IR sensors
  */
 typedef struct
 {
+  // Interrupt setup
+  int pin;
+  // Sensor state
+  int dir;
+  int count;
+} WheelSensor;
+
+/* Extension of WheelSensor to handle input capture units
+ */
+typedef struct
+{
+  WheelSensor super;
   // Timer setup
   volatile uint8_t *cfg_reg;
   volatile uint8_t *int_reg;
   volatile uint16_t *tmr_reg;
   volatile unsigned int *cnt_reg;
-
   // Sensor state
-  int dir;
-  int count;
   int vel;
   int oflow;
 } WheelSensorIC;
 
-/* Internal structure for IR sensors connected via external
- * interrupt pins - no Timer units
- */
-typedef struct
-{
-  // Interrupt setup
-  int int_pin;
-
-  // Sensor state
-  int dir;
-  int count;
-} WheelSensorIN;
 
 /* Initialisation for IR sensor structs
  */
-WheelSensorIC ir_ic[NUM_IR_IC] = {
-{
-  .cfg_reg=&TCCR4B, // Timer 4 (input on D49)
-  .int_reg=&TIMSK4,
-  .tmr_reg=&TCNT4,
-  .cnt_reg=&ICR4,
-  .dir=1
-},
-{
-  .cfg_reg=&TCCR5B, // Timer 5 (input on D48)
-  .int_reg=&TIMSK5,
-  .tmr_reg=&TCNT5,
-  .cnt_reg=&ICR5,
-  .dir=1
-}
+WheelSensorIC ir_ic_x = {
+	{
+	  .pin=49,
+	  .dir=1,
+	},
+	.cfg_reg=&TCCR4B,
+	.int_reg=&TIMSK4,
+	.tmr_reg=&TCNT4,
+	.cnt_reg=&ICR4,
+};
+WheelSensorIC ir_ic_y = {
+	{
+	  .pin=48,
+	  .dir=1,
+	},
+	.cfg_reg=&TCCR5B,
+	.int_reg=&TIMSK5,
+	.tmr_reg=&TCNT5,
+	.cnt_reg=&ICR5,
+};
+WheelSensor ir_x = {
+	.pin=2,
+	.dir=1,
+};
+WheelSensor ir_y = {
+	.pin=3,
+	.dir=1,
 };
 
-WheelSensorIN ir_in[NUM_IR_IN] = {
-{
-  .int_pin=2,
-  .dir=1
-},
-{
-  .int_pin=3,
-  .dir=1
-}
-};
+WheelSensor* all_ir[] = {(WheelSensor*)&ir_ic_x, (WheelSensor*)&ir_ic_y, &ir_x, &ir_y};
+WheelSensorIC* ic_ir[] = {&ir_ic_x, &ir_ic_y};
 
 /* Required prototypes
  */
@@ -115,44 +135,44 @@ void trackInit(void){
 
   // Initialise all IC sensors
   for(i=0;i<NUM_IR_IC;i++){
-    *(ir_ic[i].cfg_reg) = _BV(CS12)  // Set clock divider to 1024
+    *(ic_ir[i]->cfg_reg) = _BV(CS12)  // Set clock divider to 1024
                      | _BV(CS10)
                      | _BV(ICNC1) // Enable noise canceller
                      | _BV(ICES1);// Enable input capture
 
-    *(ir_ic[i].int_reg) = _BV(ICIE1) // Enable capture IRQ
+    *(ic_ir[i]->int_reg) = _BV(ICIE1) // Enable capture IRQ
                      | _BV(TOIE1);// Enable overflow IRQ
   }
 
   // Initialise all IN sensors
-  pinMode(ir_in[0].int_pin, INPUT);
-  attachInterrupt(digitalPinToInterrupt(ir_in[0].int_pin), int_sensor_tick_X, RISING);
-  pinMode(ir_in[1].int_pin, INPUT);
-  attachInterrupt(digitalPinToInterrupt(ir_in[1].int_pin), int_sensor_tick_Y, RISING);
+  pinMode(all_ir[X2]->pin, INPUT);
+  attachInterrupt(digitalPinToInterrupt(all_ir[X2]->pin), int_sensor_tick_X, RISING);
+  pinMode(all_ir[Y2]->pin, INPUT);
+  attachInterrupt(digitalPinToInterrupt(all_ir[Y2]->pin), int_sensor_tick_Y, RISING);
 }
 
 
 void trackSetDir(int x, int y){
-  ir_ic[X].dir=x<0?-1:1;
-  ir_in[X].dir=x<0?-1:1;
-  ir_ic[Y].dir=y<0?-1:1;
-  ir_in[Y].dir=y<0?-1:1;
-
-  return;
+	int i;
+	for(i=0;i<NUM_IR;i++)
+		if(IS_X(i))
+		  all_ir[i]->dir=x<0?-1:1;
+	  else
+		  all_ir[i]->dir=y<0?-1:1;
 }
 
 
 void trackGetPos(WheelPos *pos){
-  pos->x1 = ir_ic[X].count;
-  pos->x2 = ir_in[X].count;
-  pos->y1 = ir_ic[Y].count;
-  pos->y2 = ir_in[Y].count;
+  pos->x1 = all_ir[X1]->count;
+  pos->y1 = all_ir[Y1]->count;
+  pos->x2 = all_ir[X2]->count;
+  pos->y2 = all_ir[Y2]->count;
 }
 
 
 void trackGetVel(WheelVel *vel){
-  vel->x = ir_ic[0].vel;
-  vel->y = ir_ic[1].vel;
+  vel->x = ic_ir[X1]->vel;
+  vel->y = ic_ir[Y1]->vel;
 }
 
 
@@ -166,16 +186,16 @@ void trackGetVel(WheelVel *vel){
 inline void timer_capture(int i) {
 
   //Reset timer (not automatic with NORMAL mode)
-  ir_ic[i].tmr_reg = 0;
+  ic_ir[i]->tmr_reg = 0;
 
   //Increment tick count
-  ir_ic[i].count+=ir_ic[i].dir;
+  ic_ir[i]->super.count+=ic_ir[i]->super.dir;
 
   //Find speed when no overflowed
-  if(ir_ic[i].oflow)
-    ir_ic[i].oflow=0;
+  if(ic_ir[i]->oflow)
+    ic_ir[i]->oflow=0;
   else
-    ir_ic[i].vel=ir_ic[i].dir*(*(ir_ic[i].cnt_reg)>>1);
+    ic_ir[i]->vel=ic_ir[i]->super.dir*(*(ic_ir[i]->cnt_reg)>>1);
 }
 
 
@@ -183,8 +203,8 @@ inline void timer_capture(int i) {
  *  Handle overflow of capture timer on sensor i
  */
 inline void timer_overflow(int i) {
-  ir_ic[i].oflow=1;
-  ir_ic[i].vel=0;//TODO add to speed on overflow
+  ic_ir[i]->oflow=1;
+  ic_ir[i]->vel=0;//TODO add to speed on overflow
 }
 
 /* int_sensor_tick(int i)
@@ -195,14 +215,14 @@ inline void int_sensor_tick(int i){
   __asm__("nop\n\t""nop\n\t""nop\n\t""nop\n\t");
 
   //TODO avoid overhead of digitalRead
-  if(digitalRead(ir_in[i].int_pin))
-    ir_in[i].count+=ir_in[i].dir;
+  if(digitalRead(all_ir[i]->pin))
+    all_ir[i]->count+=all_ir[i]->dir;
 }
 
 // Link actual ISRs to the handler functions above
-ISR(TIMER4_OVF_vect) {timer_overflow(X);}
-ISR(TIMER5_OVF_vect) {timer_overflow(Y);}
-ISR(TIMER4_CAPT_vect) {timer_capture(X);}
-ISR(TIMER5_CAPT_vect) {timer_capture(Y);}
-void int_sensor_tick_X(){int_sensor_tick(X);}
-void int_sensor_tick_Y(){int_sensor_tick(Y);}
+ISR(TIMER4_OVF_vect) {timer_overflow(X1);}
+ISR(TIMER5_OVF_vect) {timer_overflow(Y1);}
+ISR(TIMER4_CAPT_vect) {timer_capture(X1);}
+ISR(TIMER5_CAPT_vect) {timer_capture(Y1);}
+void int_sensor_tick_X(){int_sensor_tick(X2);}
+void int_sensor_tick_Y(){int_sensor_tick(Y2);}
