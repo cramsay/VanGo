@@ -72,12 +72,12 @@ void loop() {
       xSpeed=xSpeed/hcf;
       ySpeed=ySpeed/hcf;
     }
-    setMotorSpeedX(xSpeed);
-    setMotorSpeedY(ySpeed);
   /*
      * adjust to balance x and y while maintaining ratio so if 
      * x1 and x2 aren't the same this can be fixed
-     * apply these values to motors
+  */
+
+  /*
      * short loop
      * this loop is used to allow it to drive forward for a 
      * while adjusting the motor speeds at set intervals
@@ -98,8 +98,18 @@ void setDirections(){
   if(xDiff<0){
     motors.x1->run(BACKWARD);
     motors.x2->run(BACKWARD);
-    
+  }else{
+    motors.x1->run(FORWARD);
+    motors.x2->run(FORWARD);
   }
+  if(yDiff<0){
+    motors.y1->run(BACKWARD);
+    motors.y2->run(BACKWARD);
+  }else{
+    motors.y1->run(FORWARD);
+    motors.y2->run(FORWARD);
+  }
+  trackSetDir(xDiff,yDiff);
 }
 
 void setDiff(){
