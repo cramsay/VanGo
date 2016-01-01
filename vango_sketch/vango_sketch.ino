@@ -6,9 +6,7 @@
  * need to call from other peoples sections.
  * 
  * To Do List
- * Finish implmenting comments
- * Add ability to travel in negative directions
- * Integrate other code sections
+ * Should be able to track both wheels on one axis in different directions.
  */
 #include "tracking.h"
 #include <Wire.h>
@@ -31,8 +29,6 @@ Motors motors;
 WheelPos target ={0,0,0,0};
 WheelPos current ={0,0,0,0};
 WheelPos diff={0,0,0,0};
-int xDiff;
-int yDiff;
 
 
 void setup() {
@@ -53,77 +49,54 @@ Motors motorInit(){
 }
 
 void loop() {
-  int xSpeed;
-  int ySpeed;
   //nextCoord(&target);
-  setDiff();
-  while((xDiff>accuracyLimit)&&(yDiff>accuracyLimit)){
-    /*
-     * Working on beneath
-     * find ratio between x and y
-     * find smallest applicable approximation of ratio using 
-     * whole numbers basically
-     */
+  int largestDistance;
+  updateDiff();
+  while(diff.x1>accuracyLimit||diff.x2>accuracyLimit||diff.y1>accuracyLimit||diff.y2>accuracyLimit){
     setDirections();
-    xSpeed=xDiff;
-    ySpeed=yDiff;
-    hcf=findHighestCommonFactor(xSpeed,ySpeed);
-    if(hcf!=null){
-      xSpeed=xSpeed/hcf;
-      ySpeed=ySpeed/hcf;
+    /* Remember you've already set the directions so at this stage
+     *  you can just deal with magnitudes everywhere.
+     */ 
+    largestDistance=findMaxMagDiff();
+    if(largestDistance>distanceInTimeUnitLimit){
+      scaleDiff(distanceInTimeUnitLimit/largestDistance);
     }
-  /*
-     * adjust to balance x and y while maintaining ratio so if 
-     * x1 and x2 aren't the same this can be fixed
-  */
-
-  /*
-     * short loop
-     * this loop is used to allow it to drive forward for a 
-     * while adjusting the motor speeds at set intervals
-     * to try to get them to what was intended accounting
-     * for different environmental issues like them being better
-     * in one direction than the other, etc
-     *      wait very small amount of time
-     *      check velocities
-     *      adjust motors
-     * check position
-      */
-    setDiff();
+    move();
+    wait(timeUnit);
+    updateDiff();
   }
 }
 
-//TODO stopped working here last time
+
+
+//TODO need to fix last line to take 4 parameters
 void setDirections(){
-  if(xDiff<0){
+  if(diff.x1<0){
     motors.x1->run(BACKWARD);
-    motors.x2->run(BACKWARD);
   }else{
     motors.x1->run(FORWARD);
+  }
+  if(diff.x2<0){
+    motors.x2->run(BACKWARD);
+  }else{
     motors.x2->run(FORWARD);
   }
-  if(yDiff<0){
+  if(diff.y1<0){
     motors.y1->run(BACKWARD);
-    motors.y2->run(BACKWARD);
   }else{
     motors.y1->run(FORWARD);
+  }
+  if(diff.y2<0){
+    motors.y2->run(BACKWARD);
+  }else{
     motors.y2->run(FORWARD);
   }
   trackSetDir(xDiff,yDiff);
 }
 
-void setDiff(){
-  trackGetPos(&current);
-  updateDiff(target,current);
-  xDiff=(diff.x1+diff.x2)/2;
-  yDiff=(diff.y1+diff.y2)/2;
-}
 
 void updateDiff(WheelPos target,WheelPos current){
-  /*
-   * Do stuff mainly subtraction I'd guess really but I'm
-   * working out high level stuff just now.
-   */
+   trackGetPos(&current);
    WheelPos diff = {0,0,0,0};
    diff.x1=target.x1-current.x1;
    diff.x1=target.x2-current.x2;
@@ -131,13 +104,17 @@ void updateDiff(WheelPos target,WheelPos current){
    diff.x1=target.y2-current.y2;
 }
 
-int findHighestCommonFactor(int one,int two){
-  int hcf=null;
-  for(i=0;i<one||i<two;i++){
-    if ((one%i==0)&&(two%i==0)){
-      hcf=i;
-    }
-  }
-  return hcf;
+int findMaxMagDiff(){
+  /*Run through each part of diff if it's negative 
+   * make it positive then find the biggest out 
+   * of them
+   */
+}
+
+void scaleDiff(int scaleFactor){
+  /* Multiply all four diffs by scale factor
+   *  this will give you the largest being the 
+   *  limit and the rest being appropriately scaled down.
+   */
 }
 
