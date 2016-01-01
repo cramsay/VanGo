@@ -7,6 +7,7 @@
  * 
  * To Do List
  * Should be able to track both wheels on one axis in different directions.
+ * Need to use double for diff&scale factor rather than int otherwise scale diff won't work.
  */
 #include "tracking.h"
 #include <Wire.h>
@@ -109,6 +110,28 @@ int findMaxMagDiff(){
    * make it positive then find the biggest out 
    * of them
    */
+   if(diff.x1<0){
+      diff.x1=diff.x1*-1;
+   }
+   if(diff.x2<0){
+      diff.x2=diff.x2*-1;
+   }
+   if(diff.y1<0){
+      diff.y1=diff.y1*-1;
+   }
+   if(diff.y2<0){
+      diff.y2=diff.y2*-1;
+   }
+   if(diff.x1>=diff.x2&&diff.x1>=diff.y1&&diff.x1>=diff.y2){
+      return diff.x1;
+   }
+   if(diff.x2>=diff.y1&&diff.x2>=y2){
+      return diff.x2;
+   }
+   if(diff.y1>=diff.y2){
+    return diff.y1;
+   }
+   return diff.y2; 
 }
 
 void scaleDiff(int scaleFactor){
@@ -116,5 +139,9 @@ void scaleDiff(int scaleFactor){
    *  this will give you the largest being the 
    *  limit and the rest being appropriately scaled down.
    */
+   diff.x1=diff.x1*scaleFactor;
+   diff.x2=diff.x2*scaleFactor;
+   diff.y1=diff.y1*scaleFactor;
+   diff.y2=diff.y2*scaleFactor;
 }
 
