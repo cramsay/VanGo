@@ -7,7 +7,10 @@
  * 
  * To Do List
  * Should be able to track both wheels on one axis in different directions.
- * Need to use double for diff&scale factor rather than int otherwise scale diff won't work.
+ * 
+ * Likely Problems checklist:
+ * Make sure the motors are hooked up to the same wheels as the tracking thinks they are.
+ * Passing a double into a method that takes an int in go.
  */
 #include "tracking.h"
 #include <Wire.h>
@@ -15,8 +18,10 @@
 #include "utility/Adafruit_PWMServoDriver.h"
 
 #define accuracyLimit 2
-#define motorLowerLimit 50
-#define motorUpperLimit 150
+#define speedLimit 40
+#define timeUnit 1
+#define maxPosSpeed 40
+
 
 
 typedef struct Motors{
@@ -26,10 +31,17 @@ typedef struct Motors{
   Adafruit_DCMotor* y2;
 }Motors;
 
+typedef struct Speeds{
+  double x1;
+  double x2;
+  double y1;
+  double y2;
+}Speeds;
+
 Motors motors;
 WheelPos target ={0,0,0,0};
 WheelPos current ={0,0,0,0};
-WheelPos diff={0,0,0,0};
+Speeds idealSpeeds={0,0,0,0};
 
 
 void setup() {
@@ -51,20 +63,20 @@ Motors motorInit(){
 
 void loop() {
   //nextCoord(&target);
-  int largestDistance;
-  updateDiff();
-  while(diff.x1>accuracyLimit||diff.x2>accuracyLimit||diff.y1>accuracyLimit||diff.y2>accuracyLimit){
+  double largestSpeed;
+  updateIdealSpeeds();
+  while(idealSpeeds.x1>accuracyLimit||idealSpeeds.x2>accuracyLimit||idealSpeeds.y1>accuracyLimit||idealSpeeds.y2>accuracyLimit){
     setDirections();
     /* Remember you've already set the directions so at this stage
      *  you can just deal with magnitudes everywhere.
      */ 
-    largestDistance=findMaxMagDiff();
-    if(largestDistance>distanceInTimeUnitLimit){
-      scaleDiff(distanceInTimeUnitLimit/largestDistance);
+    largestSpeed=findMaxIdealSpeeds();
+    if(largestSpeed>speedLimit){
+      scaleIdealSpeeds(speedLimit/largestSpeed);
     }
-    move();
-    wait(timeUnit);
-    updateDiff();
+    go();
+    delay(timeUnit);
+    updateIdealSpeeds();
   }
 }
 
@@ -72,76 +84,83 @@ void loop() {
 
 //TODO need to fix last line to take 4 parameters
 void setDirections(){
-  if(diff.x1<0){
+  if(idealSpeeds.x1<0){
     motors.x1->run(BACKWARD);
   }else{
     motors.x1->run(FORWARD);
   }
-  if(diff.x2<0){
+  if(idealSpeeds.x2<0){
     motors.x2->run(BACKWARD);
   }else{
     motors.x2->run(FORWARD);
   }
-  if(diff.y1<0){
+  if(idealSpeeds.y1<0){
     motors.y1->run(BACKWARD);
   }else{
     motors.y1->run(FORWARD);
   }
-  if(diff.y2<0){
+  if(idealSpeeds.y2<0){
     motors.y2->run(BACKWARD);
   }else{
     motors.y2->run(FORWARD);
   }
-  trackSetDir(xDiff,yDiff);
+//  trackSetDir(xDiff,yDiff);
 }
 
 
-void updateDiff(WheelPos target,WheelPos current){
+void updateIdealSpeeds(){
    trackGetPos(&current);
-   WheelPos diff = {0,0,0,0};
-   diff.x1=target.x1-current.x1;
-   diff.x1=target.x2-current.x2;
-   diff.x1=target.y1-current.y1;
-   diff.x1=target.y2-current.y2;
+   WheelPos idealSpeeds = {0,0,0,0};
+   idealSpeeds.x1=target.x1-current.x1;
+   idealSpeeds.x1=target.x2-current.x2;
+   idealSpeeds.x1=target.y1-current.y1;
+   idealSpeeds.x1=target.y2-current.y2;
 }
 
-int findMaxMagDiff(){
-  /*Run through each part of diff if it's negative 
+int findMaxIdealSpeeds(){
+  /*Run through each part of idealSpeeds if it's negative 
    * make it positive then find the biggest out 
    * of them
    */
-   if(diff.x1<0){
-      diff.x1=diff.x1*-1;
+   if(idealSpeeds.x1<0){
+      idealSpeeds.x1=idealSpeeds.x1*-1;
    }
-   if(diff.x2<0){
-      diff.x2=diff.x2*-1;
+   if(idealSpeeds.x2<0){
+      idealSpeeds.x2=idealSpeeds.x2*-1;
    }
-   if(diff.y1<0){
-      diff.y1=diff.y1*-1;
+   if(idealSpeeds.y1<0){
+      idealSpeeds.y1=idealSpeeds.y1*-1;
    }
-   if(diff.y2<0){
-      diff.y2=diff.y2*-1;
+   if(idealSpeeds.y2<0){
+      idealSpeeds.y2=idealSpeeds.y2*-1;
    }
-   if(diff.x1>=diff.x2&&diff.x1>=diff.y1&&diff.x1>=diff.y2){
-      return diff.x1;
+   if(idealSpeeds.x1>=idealSpeeds.x2&&idealSpeeds.x1>=idealSpeeds.y1&&idealSpeeds.x1>=idealSpeeds.y2){
+      return idealSpeeds.x1;
    }
-   if(diff.x2>=diff.y1&&diff.x2>=y2){
-      return diff.x2;
+   if(idealSpeeds.x2>=idealSpeeds.y1&&idealSpeeds.x2>=idealSpeeds.y2){
+      return idealSpeeds.x2;
    }
-   if(diff.y1>=diff.y2){
-    return diff.y1;
+   if(idealSpeeds.y1>=idealSpeeds.y2){
+    return idealSpeeds.y1;
    }
-   return diff.y2; 
+   return idealSpeeds.y2; 
 }
 
-void scaleDiff(int scaleFactor){
-  /* Multiply all four diffs by scale factor
+void scaleIdealSpeeds(double scaleFactor){
+  /* Multiply all four idealSpeedss by scale factor
    *  this will give you the largest being the 
    *  limit and the rest being appropriately scaled down.
    */
-   diff.x1=diff.x1*scaleFactor;
-   diff.x2=diff.x2*scaleFactor;
-   diff.y1=diff.y1*scaleFactor;
-   diff.y2=diff.y2*scaleFactor;
+   idealSpeeds.x1=idealSpeeds.x1*scaleFactor;
+   idealSpeeds.x2=idealSpeeds.x2*scaleFactor;
+   idealSpeeds.y1=idealSpeeds.y1*scaleFactor;
+   idealSpeeds.y2=idealSpeeds.y2*scaleFactor;
+}
+
+void go(){
+  motors.x1->setSpeed((idealSpeeds.x1/maxPosSpeed)*250);
+  motors.x2->setSpeed((idealSpeeds.x2/maxPosSpeed)*250);
+  motors.y1->setSpeed((idealSpeeds.y1/maxPosSpeed)*250);
+  motors.y2->setSpeed((idealSpeeds.y2/maxPosSpeed)*250);
 }
 
