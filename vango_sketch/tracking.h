@@ -22,22 +22,22 @@ typedef struct WheelPos{
 } WheelPos;
 
 
-/* trackInit: 
+/* trackInit:
  *  Must be called before any other wheel tracking features
  *  will operate correctly
  */
 void trackInit(void);
 
 
-/* trackSetDir(int x, int y)
+/* trackSetDir(int x1, int y1, int x2, int y2)
  *  Tells the module the direction the wheels are being turned
  *  This lets the tracking be as simple as possible
- *  
+ *
  *  Directions control increment of positions and velocity signs.
  *  Any non-negative parameter is considered "forward", otherwise
  *  treated as "reverse"
  */
-void trackSetDir(int x, int y);
+void trackSetDir(int x1, int y1, int x2, int y2);
 
 
 /* trackGetPos(WheelPos *pos)

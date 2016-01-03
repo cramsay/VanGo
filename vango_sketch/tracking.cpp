@@ -152,13 +152,11 @@ void trackInit(void) {
 }
 
 
-void trackSetDir(int x, int y) {
-    int i;
-    for(i=0; i<NUM_IR; i++)
-        if(IS_X(i))
-            all_ir[i]->dir=x<0?-1:1;
-        else
-            all_ir[i]->dir=y<0?-1:1;
+void trackSetDir(int x1, int y1, int x2, int y2) {
+    all_ir[X1]->dir=x1<0?-1:1;
+    all_ir[Y1]->dir=y1<0?-1:1;
+    all_ir[X2]->dir=x2<0?-1:1;
+    all_ir[Y2]->dir=y2<0?-1:1;
 }
 
 

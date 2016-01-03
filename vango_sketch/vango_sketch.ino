@@ -17,7 +17,7 @@ void setup() {
   Serial.begin(115200);
   
   trackInit();
-  trackSetDir(1,1);
+  trackSetDir(1,1,1,1);
 }
 
 void loop() {
