@@ -82,8 +82,8 @@ typedef struct
     volatile uint16_t *tmr_reg;
     volatile unsigned int *cnt_reg;
     // Sensor state
-    int vel;
-    int oflow;
+    int period;
+    int period_prev;
 } WheelSensorIC;
 
 
@@ -169,8 +169,8 @@ void trackGetPos(WheelPos *pos) {
 
 
 void trackGetVel(WheelVel *vel) {
-    vel->x = ic_ir[X1]->vel;
-    vel->y = ic_ir[Y1]->vel;
+    vel->x = 1.0 / (ic_ir[X1]->period_prev * ic_ir[X1]->super.dir);
+    vel->y = 1.0 / (ic_ir[Y1]->period_prev * ic_ir[Y1]->super.dir);
 }
 
 
@@ -183,17 +183,15 @@ void trackGetVel(WheelVel *vel) {
  */
 inline void timer_capture(int i) {
 
+    //Save period
+    ic_ir[i]->period_prev = ic_ir[i]->period + *(ic_ir[i]->cnt_reg);
+    ic_ir[i]->period = 0;
+    
     //Reset timer (not automatic with NORMAL mode)
     ic_ir[i]->tmr_reg = 0;
 
     //Increment tick count
     ic_ir[i]->super.count+=ic_ir[i]->super.dir;
-
-    //Find speed when no overflowed
-    if(ic_ir[i]->oflow)
-        ic_ir[i]->oflow=0;
-    else
-        ic_ir[i]->vel=ic_ir[i]->super.dir*(*(ic_ir[i]->cnt_reg)>>1);
 }
 
 
@@ -201,8 +199,7 @@ inline void timer_capture(int i) {
  *  Handle overflow of capture timer on sensor i
  */
 inline void timer_overflow(int i) {
-    ic_ir[i]->oflow=1;
-    ic_ir[i]->vel=0;//TODO add to speed on overflow
+    ic_ir[i]->period+=0xFFFF; //TODO What should happen if dir changes during period?
 }
 
 /* int_sensor_tick(int i)

@@ -7,8 +7,8 @@
 /* Structure for passing wheel velocity state
  */
 typedef struct WheelVel{
-  int x;
-  int y;
+  float x;
+  float y;
 } WheelVel;
 
 
