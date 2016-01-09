@@ -53,12 +53,8 @@ void loop() {
   y1->setSpeed(0);
   y2->setSpeed(0);
   WheelPos currentPosition={0,0,0,0};
-  WheelVel currentVelocity={0,0};
-  trackGetPos(&currentPosition);
   Serial.print("x1 position: %n\n",currentPosition.x1);
   Serial.print("x2 position: %n\n",currentPosition.x2);
   Serial.print("y1 position: %n\n",currentPosition.y1);
   Serial.print("y2 position: %n\n",currentPosition.y2);
-  Serial.print("xVel: %n\n",currentVelocity.x);
-  Serial.print("yVel: %n\n",currentVelocity.y);
 }
