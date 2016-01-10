@@ -22,10 +22,8 @@ import android.view.View.OnClickListener;
 import android.widget.ImageButton;
 import android.widget.Toast;
 
-import com.example.adam.vangodrawer.BluetoothConnection.AcceptThread;
 import com.example.adam.vangodrawer.BluetoothConnection.BluetoothSerialService;
 import com.example.adam.vangodrawer.Drawing.Drawing;
-import com.example.adam.vangodrawer.Drawing.DrawingReader;
 
 public class MainActivity extends AppCompatActivity implements OnClickListener{
 
