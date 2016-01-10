@@ -1,14 +1,13 @@
-package com.example.adam.vangodrawer;
+package com.example.adam.vangodrawer.BluetoothConnection;
 
 import android.bluetooth.BluetoothSocket;
-import android.util.Log;
+
+import com.example.adam.vangodrawer.Drawing.DrawingReader;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
-
-import javax.xml.transform.dom.DOMResult;
 
 /**
  * Created by Adam on 09/01/2016.

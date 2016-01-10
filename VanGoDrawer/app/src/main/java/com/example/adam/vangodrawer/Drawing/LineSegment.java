@@ -1,4 +1,4 @@
-package com.example.adam.vangodrawer;
+package com.example.adam.vangodrawer.Drawing;
 
 /**
  * Created by Adam on 03/01/2016.

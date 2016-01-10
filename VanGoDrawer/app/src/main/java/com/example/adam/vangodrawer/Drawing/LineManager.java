@@ -1,4 +1,4 @@
-package com.example.adam.vangodrawer;
+package com.example.adam.vangodrawer.Drawing;
 
 import java.util.ArrayList;
 import java.util.List;

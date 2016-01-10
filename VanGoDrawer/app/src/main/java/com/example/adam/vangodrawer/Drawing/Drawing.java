@@ -1,4 +1,4 @@
-package com.example.adam.vangodrawer;
+package com.example.adam.vangodrawer.Drawing;
 
 import android.graphics.PorterDuff;
 import android.view.View;
@@ -9,6 +9,8 @@ import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.view.MotionEvent;
+
+import com.example.adam.vangodrawer.R;
 
 /**
  * Created by Adam on 18/12/2015.

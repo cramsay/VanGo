@@ -1,9 +1,7 @@
 package com.example.adam.vangodrawer;
 
-import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothSocket;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -15,17 +13,19 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 
-import java.io.IOException;
-import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Set;
 import java.util.UUID;
 import android.provider.MediaStore;
 import android.app.Dialog;
 import android.view.View.OnClickListener;
-import android.widget.ArrayAdapter;
 import android.widget.ImageButton;
 import android.widget.Toast;
+
+import com.example.adam.vangodrawer.BluetoothConnection.AcceptThread;
+import com.example.adam.vangodrawer.BluetoothConnection.BluetoothSerialService;
+import com.example.adam.vangodrawer.Drawing.Drawing;
+import com.example.adam.vangodrawer.Drawing.DrawingReader;
 
 public class MainActivity extends AppCompatActivity implements OnClickListener{
 
@@ -113,7 +113,10 @@ public class MainActivity extends AppCompatActivity implements OnClickListener{
                 if(foundDevice!=null){
                     Log.d(foundDevice.getName(), foundDevice.getAddress());
                     Log.d("UUID", foundDevice.getUuids()[0].getUuid().toString());
-                    new AcceptThread(mBluetoothAdapter, foundDevice, new DrawingReader(drawing.getLineManager())).start();
+
+                    BluetoothSerialService bs = new BluetoothSerialService(getApplicationContext());
+                    bs.connect(foundDevice);
+
                 }else{
                     showMessage("VanGoBot was not found");
                 }
@@ -189,8 +192,7 @@ public class MainActivity extends AppCompatActivity implements OnClickListener{
     }
 
     private void showMessage(String s){
-        Toast savedToast = Toast.makeText(getApplicationContext(),
-                s, Toast.LENGTH_SHORT);
+        Toast savedToast = Toast.makeText(getApplicationContext(),s, Toast.LENGTH_SHORT);
         savedToast.show();
     }
 }
