@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/action_about"
+        android:orderInCategory="2"
+        android:background="#000000"
+        android:title="A2"/>
+    <item
+        android:orderInCategory="3"
+        android:background="#DC143C"
+        android:title="A3"/>
+    <item
+        android:orderInCategory="3"
+        android:background="#DC143C"
+        android:title="A4"/>
+</menu>
