@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:gravity="center"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <ImageButton
+        android:id="@+id/a0_btn"
+        android:layout_width="@dimen/a0_ico"
+        android:layout_height="@dimen/a0_ico"
+        android:layout_weight="1"
+        android:contentDescription="A0"
+        android:src="@drawable/a0" />
+    <ImageButton
+        android:id="@+id/a1_btn"
+        android:layout_width="@dimen/a1_ico"
+        android:layout_height="@dimen/a1_ico"
+        android:layout_weight="1"
+        android:contentDescription="A1"
+        android:src="@drawable/a1" />
+    <ImageButton
+        android:id="@+id/a2_btn"
+        android:layout_width="@dimen/a2_ico"
+        android:layout_height="@dimen/a2_ico"
+        android:layout_weight="1"
+        android:contentDescription="A2"
+        android:src="@drawable/a2" />
+    <ImageButton
+        android:id="@+id/a3_btn"
+        android:layout_width="@dimen/a3_ico"
+        android:layout_height="@dimen/a3_ico"
+        android:layout_weight="1"
+        android:contentDescription="A3"
+        android:src="@drawable/a3" />
+    <ImageButton
+        android:id="@+id/a4_btn"
+        android:layout_width="@dimen/a4_ico"
+        android:layout_height="@dimen/a4_ico"
+        android:layout_weight="1"
+        android:contentDescription="A4"
+        android:src="@drawable/a4" />
+</LinearLayout>

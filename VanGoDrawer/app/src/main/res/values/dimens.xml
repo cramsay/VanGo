@@ -1,0 +1,19 @@
+<resources>
+    <!-- Default screen margins, per the Android Design guidelines. -->
+    <dimen name="activity_horizontal_margin">16dp</dimen>
+    <dimen name="activity_vertical_margin">16dp</dimen>
+    <dimen name="fab_margin">16dp</dimen>
+    <dimen name="brush_size">10dp</dimen>
+    <dimen name="a0_ico">130dp</dimen>
+    <dimen name="a1_ico">110dp</dimen>
+    <dimen name="a2_ico">90dp</dimen>
+    <dimen name="a3_ico">70dp</dimen>
+    <dimen name="a4_ico">50dp</dimen>
+    <!-- Change these values to suit real world values -->
+    <integer name="a0_h">1189</integer>
+    <integer name="a1_h">841</integer>
+    <integer name="a2_h">594</integer>
+    <integer name="a3_h">420</integer>
+    <integer name="a4_h">297</integer>
+    <integer name="a4_w">210</integer>
+</resources>
