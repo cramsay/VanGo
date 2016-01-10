@@ -1,21 +1,12 @@
 /*
- * At the moment this is how I see the main body of the 
- * code working. The areas enclosed in comments using /*
- * are what I intend to fill in myself and those using
- * // are currently there to leave in lines of code I'll
- * need to call from other peoples sections.
- * 
- * To Do List
- * Should be able to track both wheels on one axis in different directions.
- * 
  * Likely Problems checklist:
  * Make sure the motors are hooked up to the same wheels as the tracking thinks they are.
- * Passing a double into a method that takes an int in go.
  */
 #include "tracking.h"
 #include <Wire.h>
 #include <Adafruit_MotorShield.h>
 #include "utility/Adafruit_PWMServoDriver.h"
+#include <Servo.h>
 
 //Smallest distance the car is capable of moving. By including this it stops
 //the car from trying to edge back and forwards to get to an exact point it
@@ -52,6 +43,7 @@ typedef struct Speeds{
 }Speeds;
 
 Servo penLift;
+int penLocation;
 Motors motors;
 //Directional Structures
 WheelPos target ={0,0,0,0};
@@ -61,33 +53,38 @@ WheelPos current ={0,0,0,0};
 Speeds idealSpeeds={0,0,0,0};
 
 //Bias Structures
+/*
+ * These are used throughout to try to adjust for 
+ * inequalities between the motors. DC motors are
+ * also usually better at turning in one direction
+ * than the other hence the need for a bias in 
+ * each direction.
+ */
 Speeds forwardBias = {0,0,0,0};
 Speeds backwardBias={0,0,0,0};
 Speeds currentDirection{0,0,0,0};
 
-int penUp;
 
 void setup() {
   trackInit();
   //adamStuff();
-  motors=motorInit();
+  motorInit();
 }
 
-Motors motorInit(){
+void motorInit(){
   /*
    * Remember to check this against hardware set up to ensure
    * they match the sensor labels and are on the correct axis.
    */
   penLift.attach(servoPin);
   Adafruit_MotorShield AFMS = Adafruit_MotorShield();
-  Motors motorStruct={AFMS.getMotor(1),AFMS.getMotor(3),
+  Motors motors={AFMS.getMotor(1),AFMS.getMotor(3),
                       AFMS.getMotor(2),AFMS.getMotor(4)};
-  return motorStruct;
 }
 
 void loop() {
-  //nextCoord(&target,&penUp);
-  if(penUp==1){
+  //nextCoord(&target,&penLocation);
+  if(penLocation==1){
     penLift.write(penUp);
   }else{
     penLift.write(penDown);
@@ -96,10 +93,9 @@ void loop() {
   updateIdealSpeeds();
   while(idealSpeeds.x1>accuracyLimit||idealSpeeds.x2>accuracyLimit||idealSpeeds.y1>accuracyLimit||idealSpeeds.y2>accuracyLimit){
     setDirections();
-    /* Remember you've already set the directions so at this stage
-     *  you can just deal with magnitudes everywhere.
-     */ 
+    //After the directions have been accounted for only the magnitudes are important.
     largestSpeed=findMaxIdealSpeeds();
+    //After the line above the ideal speeds are magnitude only.
     if(largestSpeed>speedLimit){
       scaleIdealSpeeds(speedLimit/largestSpeed);
     }
@@ -110,6 +106,10 @@ void loop() {
   }
 }
 
+/*
+ * Used to update either the forward or backward bias depending on the
+ * direction of each wheel. 
+ */
 void updateBias(){
   WheelPos newPosition={0,0,0,0};
   trackGetPos(&newPosition);
@@ -119,11 +119,11 @@ void updateBias(){
   newPosition.y2=newPosition.y2-current.y2;
   //newPosition now holds the actual speed in wheel segments per time unit.
   if(currentDirection.x1=1){
-    forwardBias.x1=forwardBias.x1+(newPosition.x1-idealSpeed.x1);
+    forwardBias.x1=forwardBias.x1+(newPosition.x1-idealSpeeds.x1);
     //The bias is adjusted by the difference between the actual 
     //speed and the ideal speed to try to correct the actual speed.
   }else{
-    backwardBias.x1=backwardBias.x1+(idealSpeed.x1+newPosition.x1);
+    backwardBias.x1=backwardBias.x1+(idealSpeeds.x1+newPosition.x1);
     //This has to be the ideal speed plus the actual speed here
     //as the actual speed should be negative where as by this stage
     //the ideal speed will be a magnitute and hence positive. 
@@ -135,26 +135,30 @@ void updateBias(){
     //the wrong direction.
   }
   if(currentDirection.x2=1){
-    forwardBias.x2=forwardBias.x2+(newPosition.x2-idealSpeed.x2);
+    forwardBias.x2=forwardBias.x2+(newPosition.x2-idealSpeeds.x2);
   }else{
-    backwardBias.x2=backwardBias.x2+(idealSpeed.x2+newPosition.x2);
+    backwardBias.x2=backwardBias.x2+(idealSpeeds.x2+newPosition.x2);
     //Same as for x1
   }
   if(currentDirection.y1=1){
-    forwardBias.y1=forwardBias.y1+(newPosition.y1-idealSpeed.y1);
+    forwardBias.y1=forwardBias.y1+(newPosition.y1-idealSpeeds.y1);
   }else{
-    backwardBias.y1=backwardBias.y1+(idealSpeed.y1+newPosition.y1);
+    backwardBias.y1=backwardBias.y1+(idealSpeeds.y1+newPosition.y1);
     //Same as for x1
   }
   if(currentDirection.y2=1){
-    forwardBias.y2=forwardBias.y2+(newPosition.y2-idealSpeed.y2);
+    forwardBias.y2=forwardBias.y2+(newPosition.y2-idealSpeeds.y2);
   }else{
-    backwardBias.y2=backwardBias.y2+(idealSpeed.y2+newPosition.y2);
+    backwardBias.y2=backwardBias.y2+(idealSpeeds.y2+newPosition.y2);
     //Same as for x1
   }
 }
 
-//TODO need to fix last line to take 4 parameters
+/*
+ * Sets the direction that each motor should be turning in.
+ * Also stores this direction for use in the bias and informs
+ * the tracking module of these directions.
+ */
 void setDirections(){
   if(idealSpeeds.x1<0){
     motors.x1->run(BACKWARD);
@@ -187,7 +191,10 @@ void setDirections(){
   trackSetDir(idealSpeeds.x1,idealSpeeds.y1,idealSpeeds.x2,idealSpeeds.y2);
 }
 
-
+/*
+ * Uses the tracking section to find the current location and compares this
+ * to the target to give a set of ideal speeds for each wheel.
+ */
 void updateIdealSpeeds(){
    trackGetPos(&current);
    WheelPos idealSpeeds = {0,0,0,0};
@@ -196,12 +203,11 @@ void updateIdealSpeeds(){
    idealSpeeds.x1=target.y1-current.y1;
    idealSpeeds.x1=target.y2-current.y2;
 }
-
+/*
+ * Returns the maximum ideal speed.
+ * Also changes all of the ideal speeds into magnitudes.
+ */
 int findMaxIdealSpeeds(){
-  /*Run through each part of idealSpeeds if it's negative 
-   * make it positive then find the biggest out 
-   * of them
-   */
    if(idealSpeeds.x1<0){
       idealSpeeds.x1=idealSpeeds.x1*-1;
    }
@@ -226,37 +232,41 @@ int findMaxIdealSpeeds(){
    return idealSpeeds.y2; 
 }
 
-void scaleIdealSpeeds(double scaleFactor){
-  /* Multiply all four idealSpeedss by scale factor
+  /* 
+   *  Multiply all four idealSpeeds by scale factor
    *  this will give you the largest being the 
    *  limit and the rest being appropriately scaled down.
    */
+void scaleIdealSpeeds(double scaleFactor){
    idealSpeeds.x1=idealSpeeds.x1*scaleFactor;
    idealSpeeds.x2=idealSpeeds.x2*scaleFactor;
    idealSpeeds.y1=idealSpeeds.y1*scaleFactor;
    idealSpeeds.y2=idealSpeeds.y2*scaleFactor;
 }
 
+/*
+ * This is the method that either starts the motors moving or adjusts the speed.
+ */
 void go(){
   if(currentDirection.x1=1){
-    motors.x1->setSpeed(((idealSpeeds.x1+forwardBias.x1)/maxPosSpeed)*250);
+    motors.x1->setSpeed((int)((idealSpeeds.x1+forwardBias.x1)/maxPosSpeed)*250);
   }else{
-    motors.x1->setSpeed(((idealSpeeds.x1+backwardBias.x1)/maxPosSpeed)*250);
+    motors.x1->setSpeed((int)((idealSpeeds.x1+backwardBias.x1)/maxPosSpeed)*250);
   }
   if(currentDirection.x2=1){
-    motors.x2->setSpeed(((idealSpeeds.x2+forwardBias.x2)/maxPosSpeed)*250);
+    motors.x2->setSpeed((int)((idealSpeeds.x2+forwardBias.x2)/maxPosSpeed)*250);
   }else{
-    motors.x2->setSpeed(((idealSpeeds.x2+backwardBias.x2)/maxPosSpeed)*250);
+    motors.x2->setSpeed((int)((idealSpeeds.x2+backwardBias.x2)/maxPosSpeed)*250);
   }
   if(currentDirection.y1=1){
-    motors.y1->setSpeed(((idealSpeeds.y1+forwardBias.y1)/maxPosSpeed)*250);
+    motors.y1->setSpeed((int)((idealSpeeds.y1+forwardBias.y1)/maxPosSpeed)*250);
   }else{
-    motors.y1->setSpeed(((idealSpeeds.y1+backwardBias.y1)/maxPosSpeed)*250);
+    motors.y1->setSpeed((int)((idealSpeeds.y1+backwardBias.y1)/maxPosSpeed)*250);
   }
   if(currentDirection.y2=1){
-    motors.y2->setSpeed(((idealSpeeds.y2+forwardBias.y2)/maxPosSpeed)*250);
+    motors.y2->setSpeed((int)((idealSpeeds.y2+forwardBias.y2)/maxPosSpeed)*250);
   }else{
-    motors.y2->setSpeed(((idealSpeeds.y2+backwardBias.y2)/maxPosSpeed)*250);
+    motors.y2->setSpeed((int)((idealSpeeds.y2+backwardBias.y2)/maxPosSpeed)*250);
   }
 }
 
