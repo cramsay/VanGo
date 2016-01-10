@@ -1,0 +1,19 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools" tools:context=".MainActivity">
+    <item
+        android:id="@+id/action_about"
+        android:orderInCategory="2"
+        android:showAsAction="never"
+        android:title="A2"/>
+    <item
+        android:id="@+id/action_exit"
+        android:orderInCategory="3"
+        android:showAsAction="never"
+        android:title="A3"/>
+    <item
+        android:id="@+id/action_exit"
+        android:orderInCategory="3"
+        android:showAsAction="never"
+        android:title="A4"/>
+</menu>
