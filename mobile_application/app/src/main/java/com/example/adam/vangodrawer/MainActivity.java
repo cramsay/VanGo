@@ -24,13 +24,12 @@ import android.widget.Toast;
 
 import com.example.adam.vangodrawer.BluetoothConnection.BluetoothSerialService;
 import com.example.adam.vangodrawer.Drawing.Drawing;
+import com.example.adam.vangodrawer.Drawing.DrawingReader;
 
 public class MainActivity extends AppCompatActivity implements OnClickListener{
 
     private ImageButton newPageBtn, scaleBtn, saveBtn, drawBtn;
     private Drawing drawing;
-    private String vangoAddress = "ABC2";
-    private UUID appUUID;
     protected static ArrayList<BluetoothDevice> devices;
     BroadcastReceiver mReceiver;
 
@@ -38,7 +37,6 @@ public class MainActivity extends AppCompatActivity implements OnClickListener{
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
-        appUUID = UUID.fromString("a11b73f5-9458-401b-819e-a458b9753615");
         setContentView(R.layout.activity_main);
         newPageBtn = (ImageButton)findViewById(R.id.new_btn);
         saveBtn = (ImageButton)findViewById(R.id.save_btn);
@@ -113,7 +111,7 @@ public class MainActivity extends AppCompatActivity implements OnClickListener{
                     Log.d("UUID", foundDevice.getUuids()[0].getUuid().toString());
 
                     BluetoothSerialService bs = new BluetoothSerialService(getApplicationContext());
-                    bs.connect(foundDevice);
+                    bs.connect(foundDevice, new DrawingReader(drawing.getLineManager()));
 
                 }else{
                     showMessage("VanGoBot was not found");
@@ -169,6 +167,7 @@ public class MainActivity extends AppCompatActivity implements OnClickListener{
             public void onClick(View v) {
                 drawing.setPageSize(getResources().getInteger(R.integer.a4_w), getResources().getInteger(R.integer.a4_h));
                 scaleBtn.setImageDrawable(ResourcesCompat.getDrawable(getResources(), R.drawable.a4, null));
+                drawing.startNew();
                 paperDialog.dismiss();
             }
         });
@@ -189,8 +188,8 @@ public class MainActivity extends AppCompatActivity implements OnClickListener{
         drawing.destroyDrawingCache();
     }
 
-    private void showMessage(String s){
-        Toast savedToast = Toast.makeText(getApplicationContext(),s, Toast.LENGTH_SHORT);
+    private void showMessage(String message){
+        Toast savedToast = Toast.makeText(getApplicationContext(),message, Toast.LENGTH_SHORT);
         savedToast.show();
     }
 }
