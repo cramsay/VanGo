@@ -30,8 +30,6 @@ public class MainActivity extends AppCompatActivity implements OnClickListener{
 
     private ImageButton newPageBtn, scaleBtn, saveBtn, drawBtn;
     private Drawing drawing;
-    private String vangoAddress = "ABC2";
-    private UUID appUUID;
     protected static ArrayList<BluetoothDevice> devices;
     BroadcastReceiver mReceiver;
 
@@ -39,7 +37,6 @@ public class MainActivity extends AppCompatActivity implements OnClickListener{
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
-        appUUID = UUID.fromString("a11b73f5-9458-401b-819e-a458b9753615");
         setContentView(R.layout.activity_main);
         newPageBtn = (ImageButton)findViewById(R.id.new_btn);
         saveBtn = (ImageButton)findViewById(R.id.save_btn);
@@ -191,8 +188,8 @@ public class MainActivity extends AppCompatActivity implements OnClickListener{
         drawing.destroyDrawingCache();
     }
 
-    private void showMessage(String s){
-        Toast savedToast = Toast.makeText(getApplicationContext(),s, Toast.LENGTH_SHORT);
+    private void showMessage(String message){
+        Toast savedToast = Toast.makeText(getApplicationContext(),message, Toast.LENGTH_SHORT);
         savedToast.show();
     }
 }
