@@ -200,11 +200,11 @@ void setDirections(){
  */
 void updateIdealSpeeds(){
    trackGetPos(&current);
-   WheelPos idealSpeeds = {0,0,0,0};
+   idealSpeeds = {0,0,0,0};
    idealSpeeds.x1=target.x1-current.x1;
-   idealSpeeds.x1=target.x2-current.x2;
-   idealSpeeds.x1=target.y1-current.y1;
-   idealSpeeds.x1=target.y2-current.y2;
+   idealSpeeds.x2=target.x2-current.x2;
+   idealSpeeds.y1=target.y1-current.y1;
+   idealSpeeds.y2=target.y2-current.y2;
 }
 /*
  * Returns the maximum ideal speed.
