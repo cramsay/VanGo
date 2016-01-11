@@ -73,7 +73,6 @@ public class Drawing extends View {
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         //detect user touch
-        //TODO Get line segments in this method
         float touchX = event.getX();
         float touchY = event.getY();
         switch (event.getAction()) {

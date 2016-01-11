@@ -24,6 +24,7 @@ import android.widget.Toast;
 
 import com.example.adam.vangodrawer.BluetoothConnection.BluetoothSerialService;
 import com.example.adam.vangodrawer.Drawing.Drawing;
+import com.example.adam.vangodrawer.Drawing.DrawingReader;
 
 public class MainActivity extends AppCompatActivity implements OnClickListener{
 
@@ -113,7 +114,7 @@ public class MainActivity extends AppCompatActivity implements OnClickListener{
                     Log.d("UUID", foundDevice.getUuids()[0].getUuid().toString());
 
                     BluetoothSerialService bs = new BluetoothSerialService(getApplicationContext());
-                    bs.connect(foundDevice);
+                    bs.connect(foundDevice, new DrawingReader(drawing.getLineManager()));
 
                 }else{
                     showMessage("VanGoBot was not found");
@@ -169,6 +170,7 @@ public class MainActivity extends AppCompatActivity implements OnClickListener{
             public void onClick(View v) {
                 drawing.setPageSize(getResources().getInteger(R.integer.a4_w), getResources().getInteger(R.integer.a4_h));
                 scaleBtn.setImageDrawable(ResourcesCompat.getDrawable(getResources(), R.drawable.a4, null));
+                drawing.startNew();
                 paperDialog.dismiss();
             }
         });

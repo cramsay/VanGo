@@ -1,9 +1,14 @@
 package com.example.adam.vangodrawer.BluetoothConnection;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.PrintWriter;
 import java.lang.reflect.Method;
+import java.util.Scanner;
 import java.util.UUID;
 
 import android.bluetooth.BluetoothAdapter;
@@ -14,6 +19,12 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
+
+import com.example.adam.vangodrawer.Drawing.Drawing;
+import com.example.adam.vangodrawer.Drawing.DrawingReader;
+import com.example.adam.vangodrawer.Drawing.LineManager;
+
+import javax.xml.transform.dom.DOMResult;
     /*
  * Copyright (C) 2009 The Android Open Source Project
  *
@@ -117,7 +128,7 @@ public class BluetoothSerialService {
          * Start the ConnectThread to initiate a connection to a remote device.
          * @param device  The BluetoothDevice to connect
          */
-        public synchronized void connect(BluetoothDevice device) {
+        public synchronized void connect(BluetoothDevice device, DrawingReader drawingReader) {
             if (D) Log.d(TAG, "connect to: " + device);
 
             // Cancel any thread attempting to make a connection
@@ -129,7 +140,7 @@ public class BluetoothSerialService {
             if (mConnectedThread != null) {mConnectedThread.cancel(); mConnectedThread = null;}
 
             // Start the thread to connect with the given device
-            mConnectThread = new ConnectThread(device);
+            mConnectThread = new ConnectThread(device, drawingReader);
             mConnectThread.start();
             setState(STATE_CONNECTING);
         }
@@ -139,7 +150,7 @@ public class BluetoothSerialService {
          * @param socket  The BluetoothSocket on which the connection was made
          * @param device  The BluetoothDevice that has been connected
          */
-        public synchronized void connected(BluetoothSocket socket, BluetoothDevice device) {
+        public synchronized void connected(BluetoothSocket socket, BluetoothDevice device, DrawingReader drawingReader) {
             if (D) Log.d(TAG, "connected");
 
             // Cancel the thread that completed the connection
@@ -155,7 +166,7 @@ public class BluetoothSerialService {
             }
 
             // Start the thread to manage the connection and perform transmissions
-            mConnectedThread = new ConnectedThread(socket);
+            mConnectedThread = new ConnectedThread(socket, drawingReader);
             mConnectedThread.start();
 
             // Send the name of the connected device back to the UI Activity
@@ -241,9 +252,11 @@ public class BluetoothSerialService {
         private class ConnectThread extends Thread {
             private final BluetoothSocket mmSocket;
             private final BluetoothDevice mmDevice;
+            private DrawingReader drawingReader;
 
-            public ConnectThread(BluetoothDevice device) {
+            public ConnectThread(BluetoothDevice device, DrawingReader drawingReader) {
                 mmDevice = device;
+                this.drawingReader = drawingReader;
                 BluetoothSocket tmp = null;
 
                 // Get a BluetoothSocket for a connection with the
@@ -295,7 +308,7 @@ public class BluetoothSerialService {
                 }
 
                 // Start the connected thread
-                connected(mmSocket, mmDevice);
+                connected(mmSocket, mmDevice, drawingReader);
             }
 
             public void cancel() {
@@ -315,13 +328,15 @@ public class BluetoothSerialService {
             private final BluetoothSocket mmSocket;
             private final InputStream mmInStream;
             private final OutputStream mmOutStream;
+            private DrawingReader drawingReader;
 
 
-            public ConnectedThread(BluetoothSocket socket) {
+            public ConnectedThread(BluetoothSocket socket, DrawingReader drawingReader) {
                 Log.d(TAG, "create ConnectedThread");
                 mmSocket = socket;
                 InputStream tmpIn = null;
                 OutputStream tmpOut = null;
+                this.drawingReader = drawingReader;
 
                 // Get the BluetoothSocket input and output streams
                 try {
@@ -338,14 +353,34 @@ public class BluetoothSerialService {
             public void run() {
                 Log.i(TAG, "BEGIN mConnectedThread");
                 byte[] buffer = new byte[1024];
+                PrintWriter printWriter = new PrintWriter(mmOutStream);
+                Scanner scanner = new Scanner(mmInStream);
                 int bytes;
+                String moreString = "Meer instructies, alsjeblieft\r";
+                String nextMove = null;
 
                 // Keep listening to the InputStream while connected
                 while (true) {
                     try {
+                        //ToDo: Uncomment this
+                        /*for(int i = 0; i<128; i++){
+                            nextMove = drawingReader.nextMove();
+                            if(nextMove == null) {
+                                cancel();
+                                Log.d(TAG, "Finished sending, ending connection...");
+                                throw new IOException(); //Throws an exception to close the Thread as it's finsished sending
+                            }
+                            printWriter.println(drawingReader.nextMove());
+                        }*/
+                        mmOutStream.write("Send\r\n".getBytes());
                         // Read from the InputStream
-                        bytes = mmInStream.read(buffer);
-
+                        while(true){
+                            if(scanner.hasNextLine()){
+                                if(scanner.nextLine().equals(moreString)){
+                                    break;
+                                }
+                            }
+                        }
                         //mEmulatorView.write(buffer, bytes);
                         // Send the obtained bytes to the UI Activity
                         //mHandler.obtainMessage(BlueTerm.MESSAGE_READ, bytes, -1, buffer).sendToTarget();
