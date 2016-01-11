@@ -252,24 +252,24 @@ void scaleIdealSpeeds(double scaleFactor){
  */
 void go(){
   if(currentDirection.x1==1){
-    motors.x1->setSpeed((int)((idealSpeeds.x1+forwardBias.x1)/maxPosSpeed)*250);
+    motors.x1->setSpeed((int)((idealSpeeds.x1+forwardBias.x1)/maxPosSpeed*250));
   }else{
-    motors.x1->setSpeed((int)((idealSpeeds.x1+backwardBias.x1)/maxPosSpeed)*250);
+    motors.x1->setSpeed((int)((idealSpeeds.x1+backwardBias.x1)/maxPosSpeed*250));
   }
   if(currentDirection.x2==1){
-    motors.x2->setSpeed((int)((idealSpeeds.x2+forwardBias.x2)/maxPosSpeed)*250);
+    motors.x2->setSpeed((int)((idealSpeeds.x2+forwardBias.x2)/maxPosSpeed*250));
   }else{
-    motors.x2->setSpeed((int)((idealSpeeds.x2+backwardBias.x2)/maxPosSpeed)*250);
+    motors.x2->setSpeed((int)((idealSpeeds.x2+backwardBias.x2)/maxPosSpeed*250));
   }
   if(currentDirection.y1==1){
-    motors.y1->setSpeed((int)((idealSpeeds.y1+forwardBias.y1)/maxPosSpeed)*250);
+    motors.y1->setSpeed((int)((idealSpeeds.y1+forwardBias.y1)/maxPosSpeed*250));
   }else{
-    motors.y1->setSpeed((int)((idealSpeeds.y1+backwardBias.y1)/maxPosSpeed)*250);
+    motors.y1->setSpeed((int)((idealSpeeds.y1+backwardBias.y1)/maxPosSpeed*250));
   }
   if(currentDirection.y2==1){
-    motors.y2->setSpeed((int)((idealSpeeds.y2+forwardBias.y2)/maxPosSpeed)*250);
+    motors.y2->setSpeed((int)((idealSpeeds.y2+forwardBias.y2)/maxPosSpeed*250));
   }else{
-    motors.y2->setSpeed((int)((idealSpeeds.y2+backwardBias.y2)/maxPosSpeed)*250);
+    motors.y2->setSpeed((int)((idealSpeeds.y2+backwardBias.y2)/maxPosSpeed*250));
   }
 }
 
