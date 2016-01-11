@@ -3,6 +3,7 @@
  * Make sure the motors are hooked up to the same wheels as the tracking thinks they are.
  */
 #include "tracking.h"
+#include "coms.h"
 #include <Wire.h>
 #include <Adafruit_MotorShield.h>
 #include "utility/Adafruit_PWMServoDriver.h"
@@ -13,7 +14,7 @@
 //can never reach. 
 #define accuracyLimit 2
 //Maximum speed the car shhould be allowed to travel at.
-#define speedLimit 40
+#define speedLimit 4
 //The length of time the car should be allowed to move before the actual
 //speed is measured and the bias is adjusted.
 #define timeUnit 1
@@ -26,7 +27,7 @@
 //The servo setting to lift the pen.
 #define penUp 180
 //The servo setting to drop the pen
-#define penDown 0
+#define penDown 130
 
 typedef struct Motors{
   Adafruit_DCMotor* x1;
@@ -66,8 +67,9 @@ Speeds currentDirection{0,0,0,0};
 
 
 void setup() {
+  Serial.begin(9600);
   trackInit();
-  //adamStuff();
+  comsInit();
   motorInit();
 }
 
@@ -83,7 +85,8 @@ void motorInit(){
 }
 
 void loop() {
-  //nextCoord(&target,&penLocation);
+  comsGetNextInstr(&target,&penLocation);
+  
   if(penLocation==1){
     penLift.write(penUp);
   }else{
