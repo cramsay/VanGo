@@ -3,6 +3,7 @@
  * Make sure the motors are hooked up to the same wheels as the tracking thinks they are.
  */
 #include "tracking.h"
+#include "coms.h"
 #include <Wire.h>
 #include <Adafruit_MotorShield.h>
 #include "utility/Adafruit_PWMServoDriver.h"
@@ -13,7 +14,7 @@
 //can never reach. 
 #define accuracyLimit 2
 //Maximum speed the car shhould be allowed to travel at.
-#define speedLimit 40
+#define speedLimit 4
 //The length of time the car should be allowed to move before the actual
 //speed is measured and the bias is adjusted.
 #define timeUnit 1
@@ -26,7 +27,7 @@
 //The servo setting to lift the pen.
 #define penUp 180
 //The servo setting to drop the pen
-#define penDown 0
+#define penDown 130
 
 typedef struct Motors{
   Adafruit_DCMotor* x1;
@@ -66,8 +67,9 @@ Speeds currentDirection{0,0,0,0};
 
 
 void setup() {
+  Serial.begin(9600);
   trackInit();
-  //adamStuff();
+  comsInit();
   motorInit();
 }
 
@@ -83,7 +85,8 @@ void motorInit(){
 }
 
 void loop() {
-  //nextCoord(&target,&penLocation);
+  comsGetNextInstr(&target,&penLocation);
+  
   if(penLocation==1){
     penLift.write(penUp);
   }else{
@@ -118,7 +121,7 @@ void updateBias(){
   newPosition.y1=newPosition.y1-current.y1;
   newPosition.y2=newPosition.y2-current.y2;
   //newPosition now holds the actual speed in wheel segments per time unit.
-  if(currentDirection.x1=1){
+  if(currentDirection.x1==1){
     forwardBias.x1=forwardBias.x1+(newPosition.x1-idealSpeeds.x1);
     //The bias is adjusted by the difference between the actual 
     //speed and the ideal speed to try to correct the actual speed.
@@ -134,19 +137,19 @@ void updateBias(){
     //ideal speed plus the actual speed because it is driving in
     //the wrong direction.
   }
-  if(currentDirection.x2=1){
+  if(currentDirection.x2==1){
     forwardBias.x2=forwardBias.x2+(newPosition.x2-idealSpeeds.x2);
   }else{
     backwardBias.x2=backwardBias.x2+(idealSpeeds.x2+newPosition.x2);
     //Same as for x1
   }
-  if(currentDirection.y1=1){
+  if(currentDirection.y1==1){
     forwardBias.y1=forwardBias.y1+(newPosition.y1-idealSpeeds.y1);
   }else{
     backwardBias.y1=backwardBias.y1+(idealSpeeds.y1+newPosition.y1);
     //Same as for x1
   }
-  if(currentDirection.y2=1){
+  if(currentDirection.y2==1){
     forwardBias.y2=forwardBias.y2+(newPosition.y2-idealSpeeds.y2);
   }else{
     backwardBias.y2=backwardBias.y2+(idealSpeeds.y2+newPosition.y2);
@@ -248,22 +251,22 @@ void scaleIdealSpeeds(double scaleFactor){
  * This is the method that either starts the motors moving or adjusts the speed.
  */
 void go(){
-  if(currentDirection.x1=1){
+  if(currentDirection.x1==1){
     motors.x1->setSpeed((int)((idealSpeeds.x1+forwardBias.x1)/maxPosSpeed)*250);
   }else{
     motors.x1->setSpeed((int)((idealSpeeds.x1+backwardBias.x1)/maxPosSpeed)*250);
   }
-  if(currentDirection.x2=1){
+  if(currentDirection.x2==1){
     motors.x2->setSpeed((int)((idealSpeeds.x2+forwardBias.x2)/maxPosSpeed)*250);
   }else{
     motors.x2->setSpeed((int)((idealSpeeds.x2+backwardBias.x2)/maxPosSpeed)*250);
   }
-  if(currentDirection.y1=1){
+  if(currentDirection.y1==1){
     motors.y1->setSpeed((int)((idealSpeeds.y1+forwardBias.y1)/maxPosSpeed)*250);
   }else{
     motors.y1->setSpeed((int)((idealSpeeds.y1+backwardBias.y1)/maxPosSpeed)*250);
   }
-  if(currentDirection.y2=1){
+  if(currentDirection.y2==1){
     motors.y2->setSpeed((int)((idealSpeeds.y2+forwardBias.y2)/maxPosSpeed)*250);
   }else{
     motors.y2->setSpeed((int)((idealSpeeds.y2+backwardBias.y2)/maxPosSpeed)*250);

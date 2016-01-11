@@ -89,7 +89,7 @@ typedef struct
 
 /* Initialisation for IR sensor structs
  */
-WheelSensorIC ir_ic_x = {
+WheelSensorIC ir_ic_y = {
     {
         .pin=49,
         .dir=1,
@@ -99,7 +99,7 @@ WheelSensorIC ir_ic_x = {
     .tmr_reg=&TCNT4,
     .cnt_reg=&ICR4,
 };
-WheelSensorIC ir_ic_y = {
+WheelSensorIC ir_ic_x = {
     {
         .pin=48,
         .dir=1,
