@@ -29,6 +29,8 @@
 //The servo setting to drop the pen
 #define penDown 130
 
+Adafruit_MotorShield AFMS;
+
 typedef struct Motors{
   Adafruit_DCMotor* x1;
   Adafruit_DCMotor* x2;
@@ -79,9 +81,10 @@ void motorInit(){
    * they match the sensor labels and are on the correct axis.
    */
   penLift.attach(servoPin);
-  Adafruit_MotorShield AFMS = Adafruit_MotorShield();
-  Motors motors={AFMS.getMotor(1),AFMS.getMotor(3),
+  AFMS = Adafruit_MotorShield();
+  motors={AFMS.getMotor(1),AFMS.getMotor(3),
                       AFMS.getMotor(2),AFMS.getMotor(4)};
+  AFMS.begin();
 }
 
 void loop() {
