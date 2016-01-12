@@ -1,5 +1,7 @@
 package com.example.adam.vangodrawer.Drawing;
 
+import android.util.Log;
+
 import java.util.List;
 
 /**
@@ -7,15 +9,16 @@ import java.util.List;
  */
 public class DrawingReader {
 
+    private final String TAG = "DrawingReader";
     private LineManager lineManager;
-    private int currentLine, currentSeg, x, y;
+    private int currentLine, currentSeg;
+    private boolean inPosition;
 
     public DrawingReader(LineManager lineManager){
         this.lineManager = lineManager;
         currentLine = 0;
         currentSeg = 0;
-        x = 0;
-        y = 0;
+        inPosition = false;
     }
 
     public String nextMove(){
@@ -25,35 +28,38 @@ public class DrawingReader {
             FullLine thisLine = lines.get(currentLine);
             if(thisLine.isDot()){
                 //If the line is a dot...
-                if(x == thisLine.getStartX()&&y == thisLine.getStartY()){
+                if(inPosition){
                     //... And we're in the right position, draw the dot and move on to the next line
                     currentLine++;
                     currentSeg = 0;
-                    return new Movement(0,0,true).toString();
+                    inPosition = false;
+                    return new Movement(thisLine.getStartX(), 0-thisLine.getStartY(),true).toString();
                 } else {
                     //If not, move to the correct position and leave drawing the dot to the next call
-                    x = (int) thisLine.getStartX();
-                    y = (int) thisLine.getStartY();
-                    return new Movement((int)(thisLine.getStartX()-x), (int)(thisLine.getStartY()-y), false).toString();
+                    String s = new Movement(thisLine.getStartX(), 0-thisLine.getStartY(), false).toString();
+                    inPosition = true;
+                    return s;
                 }
             } else {
                 //It's not a dot
                 //If the current segment exists
                 if(thisLine.getLine().size()>currentSeg){
                     LineSegment thisSeg = thisLine.getLine().get(currentSeg);
-                    if(thisSeg.getStartX()==x && thisSeg.getStartY()==y){
+                    if(inPosition){
                         //If we're in the right position to start
-                        x = (int)thisSeg.getEndX();
-                        y = (int)thisSeg.getEndY();
-                        currentSeg++;
-                        return new Movement((int)(thisSeg.getEndX()-thisSeg.getStartX()),
-                                (int)(thisSeg.getEndY()- thisSeg.getStartY()), true).toString();
+                        if(thisLine.getLine().size()==++currentSeg){
+                            currentSeg = 0;
+                            currentLine++;
+                            inPosition = false;
+                        }
+                        return new Movement(thisSeg.getEndX(),
+                                0-thisSeg.getEndY(), true).toString();
                     } else {
                         //We need to get in position to start drawing the line
-                        Movement thisMov = new Movement (((int)thisSeg.getStartX()-x), ((int) thisSeg.getStartY()-y),false);
-                        x = (int) thisSeg.getStartX();
-                        y = (int) thisSeg.getStartY();
+                        Movement thisMov = new Movement (thisSeg.getStartX(), 0-thisSeg.getStartY(),false);
+                        inPosition = true;
                         return thisMov.toString();
+
                     }
                 } else {
                     //If the currentSeq doesn't exist move on a line and call the method again
