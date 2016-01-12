@@ -156,8 +156,11 @@ void ctrlToNextCoord(WheelPos *nextCoord){
     //Find the biggest speed.
     for(i=0;i<NUM_MOTORS;i++){
       motors[i].idealSpeed = (motors[i].targetPos - motors[i].startPos);
+
       if(abs(motors[i].idealSpeed) > highest){
         highest = abs(motors[i].idealSpeed);  
+      } else if (abs(motors[i].idealSpeed) < ACCURACY_LIMIT){
+         motors[i].idealSpeed = 0;
       }
     }
     /**
