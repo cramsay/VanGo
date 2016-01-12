@@ -153,7 +153,6 @@ void ctrlToNextCoord(WheelPos *nextCoord){
     float highest;
     float scaleFactor = 1;
     highest = 0;
-    
     //Find the biggest speed.
     for(i=0;i<NUM_MOTORS;i++){
       motors[i].idealSpeed = (motors[i].targetPos - motors[i].startPos);
@@ -161,8 +160,7 @@ void ctrlToNextCoord(WheelPos *nextCoord){
         highest = abs(motors[i].idealSpeed);  
       }
     }
-    
-    /*
+    /**
      * If the biggest speed is higher than the speed limit. Scale all
      * down by a common factor so they are all less than the speed limit.
      */
@@ -269,6 +267,10 @@ void ctrlToNextCoord(WheelPos *nextCoord){
   }
  }
 
+/* void stopAll()
+ *  Turns off all motors and clears any volatile motor state.
+ *  Useful for stopping gracefully at end of ctrlToNextCoord() call
+ */
  void stopAll(){
   int i;
   
