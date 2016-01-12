@@ -1,5 +1,6 @@
 package com.example.adam.vangodrawer;
 
+import android.Manifest;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
@@ -7,7 +8,10 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.ActivityInfo;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.content.res.ResourcesCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -48,6 +52,8 @@ public class MainActivity extends AppCompatActivity implements OnClickListener{
         saveBtn.setOnClickListener(this);
         drawBtn.setOnClickListener(this);
         scaleBtn.setOnClickListener(this);
+        checkForPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE);
+        checkForPermission(Manifest.permission.BLUETOOTH_ADMIN);
         devices = new ArrayList<BluetoothDevice>();
         mReceiver = new BroadcastReceiver() {
             public void onReceive(Context context, Intent intent) {
@@ -194,7 +200,25 @@ public class MainActivity extends AppCompatActivity implements OnClickListener{
     }
 
     private void showMessage(String s){
-        Toast savedToast = Toast.makeText(getApplicationContext(),s, Toast.LENGTH_SHORT);
+        Toast savedToast = Toast.makeText(getApplicationContext(), s, Toast.LENGTH_SHORT);
         savedToast.show();
+    }
+
+    private void checkForPermission(String permission){
+        // Here, thisActivity is the current activity
+        if (ContextCompat.checkSelfPermission(this,
+                permission)
+                != PackageManager.PERMISSION_GRANTED) {
+
+                // No explanation needed, we can request the permission.
+
+                ActivityCompat.requestPermissions(this,
+                        new String[]{permission},
+                        5);
+
+                // MY_PERMISSIONS_REQUEST_READ_CONTACTS is an
+                // app-defined int constant. The callback method gets the
+                // result of the request.
+        }
     }
 }
