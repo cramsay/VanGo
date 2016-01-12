@@ -8,7 +8,7 @@
  */
 #define ACCURACY_LIMIT    2      // Resolution for "good enough" position
 #define SPEED_LIMIT       20    // Max assignable speed
-#define TIME_UNIT_MS      10   // Time in ms between control loop iterations
+#define TIME_UNIT_MS      1    // Time in ms between control loop iterations
 #define MAX_POS_SPEED     42  //The maximum speed the wheel could possibly turn at.
 #define MAX_MOTOR_SETTING 50 //The maximum value the motor can be set to
 
