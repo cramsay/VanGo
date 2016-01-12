@@ -1,5 +1,7 @@
 package com.example.adam.vangodrawer.Drawing;
 
+import android.util.Log;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -8,6 +10,7 @@ import java.util.List;
  */
 public class LineManager {
 
+    private final String TAG = "LineManager";
     private FullLine currentLine;
     private List<FullLine> lines;
     private int xSize, ySize, paperX, paperY;
@@ -22,15 +25,17 @@ public class LineManager {
     }
 
     public void newLine(float startX, float startY){
-        int newX = (int) (startX/xSize) * paperX;
-        int newY = (int) (startY/ySize) * paperY;
+        int newX = Math.round((startX/xSize) * paperX);
+        int newY = Math.round((startY/ySize) * paperY);
+        Log.d(TAG, "x: " + newX + " y: " + newY);
         currentLine = new FullLine(newX, newY);
         lines.add(currentLine);
     }
 
     public void addSegment(float x, float y){
-        int newX = (int) (x/xSize) * paperX;
-        int newY = (int) (y/ySize) * paperY;
+        int newX = Math.round((x/xSize) * paperX);
+        int newY = Math.round((y/ySize) * paperY);
+        Log.d(TAG, "x: " + newX + " y: " + newY);
         currentLine.addSegmentTo(newX, newY);
     }
 

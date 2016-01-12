@@ -5,28 +5,28 @@ package com.example.adam.vangodrawer.Drawing;
  */
 public class LineSegment {
 
-    private float startX, startY, endX, endY;
+    private int startX, startY, endX, endY;
 
-    public LineSegment(float startX, float startY, float endX, float endY){
+    public LineSegment(int startX, int startY, int endX, int endY){
         this.startX = startX;
         this.startY = startY;
         this.endX = endX;
         this.endY = endY;
     }
 
-    public float getStartX() {
+    public int getStartX() {
         return startX;
     }
 
-    public float getStartY() {
+    public int getStartY() {
         return startY;
     }
 
-    public float getEndX() {
+    public int getEndX() {
         return endX;
     }
 
-    public float getEndY() {
+    public int getEndY() {
         return endY;
     }
 }

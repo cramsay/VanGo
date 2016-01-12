@@ -32,6 +32,7 @@ public class MainActivity extends AppCompatActivity implements OnClickListener{
     private Drawing drawing;
     protected static ArrayList<BluetoothDevice> devices;
     BroadcastReceiver mReceiver;
+    BluetoothSerialService bs;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,6 +44,7 @@ public class MainActivity extends AppCompatActivity implements OnClickListener{
         drawBtn = (ImageButton)findViewById(R.id.draw_btn);
         scaleBtn = (ImageButton)findViewById(R.id.scale_btn);
         newPageBtn.setOnClickListener(this);
+        bs = new BluetoothSerialService();
         saveBtn.setOnClickListener(this);
         drawBtn.setOnClickListener(this);
         scaleBtn.setOnClickListener(this);
@@ -67,6 +69,7 @@ public class MainActivity extends AppCompatActivity implements OnClickListener{
     @Override
     protected void onDestroy(){
         unregisterReceiver(mReceiver);
+        bs.stop();
         super.onDestroy();
     }
     @Override
@@ -74,7 +77,7 @@ public class MainActivity extends AppCompatActivity implements OnClickListener{
         //respond to clicks
         if(view.getId()==R.id.new_btn) {
             //new page button clicked
-            drawing.startNew();
+            newImage();
         } else if (view.getId() == R.id.scale_btn){
             changePaperSize();
         } else if(view.getId() == R.id.save_btn){
@@ -107,10 +110,8 @@ public class MainActivity extends AppCompatActivity implements OnClickListener{
                     }
                 }
                 if(foundDevice!=null){
-                    Log.d(foundDevice.getName(), foundDevice.getAddress());
-                    Log.d("UUID", foundDevice.getUuids()[0].getUuid().toString());
 
-                    BluetoothSerialService bs = new BluetoothSerialService(getApplicationContext());
+                    bs.stop();
                     bs.connect(foundDevice, new DrawingReader(drawing.getLineManager()));
 
                 }else{
@@ -120,8 +121,13 @@ public class MainActivity extends AppCompatActivity implements OnClickListener{
         }
     }
 
-    private void changePaperSize(){
+    private void newImage(){
+        bs.stop();
+        drawing.startNew();
+    }
 
+    private void changePaperSize(){
+        bs.stop();
         final Dialog paperDialog = new Dialog(this);
         paperDialog.setTitle("Paper size:");
         paperDialog.setContentView(R.layout.paper_chooser);
@@ -167,7 +173,6 @@ public class MainActivity extends AppCompatActivity implements OnClickListener{
             public void onClick(View v) {
                 drawing.setPageSize(getResources().getInteger(R.integer.a4_w), getResources().getInteger(R.integer.a4_h));
                 scaleBtn.setImageDrawable(ResourcesCompat.getDrawable(getResources(), R.drawable.a4, null));
-                drawing.startNew();
                 paperDialog.dismiss();
             }
         });
@@ -188,8 +193,8 @@ public class MainActivity extends AppCompatActivity implements OnClickListener{
         drawing.destroyDrawingCache();
     }
 
-    private void showMessage(String message){
-        Toast savedToast = Toast.makeText(getApplicationContext(),message, Toast.LENGTH_SHORT);
+    private void showMessage(String s){
+        Toast savedToast = Toast.makeText(getApplicationContext(),s, Toast.LENGTH_SHORT);
         savedToast.show();
     }
 }

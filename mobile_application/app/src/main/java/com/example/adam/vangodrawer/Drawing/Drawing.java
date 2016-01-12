@@ -23,7 +23,7 @@ public class Drawing extends View {
     //drawing and canvas paint
     private Paint drawPaint, canvasPaint;
     //initial color
-    private int paintColor = 0xFF0000;
+    private int paintColor = 0xFF000000;
     //canvas
     private Canvas drawCanvas;
     //canvas bitmap
@@ -73,6 +73,7 @@ public class Drawing extends View {
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         //detect user touch
+        //TODO Get line segments in this method
         float touchX = event.getX();
         float touchY = event.getY();
         switch (event.getAction()) {

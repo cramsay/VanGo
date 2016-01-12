@@ -55,15 +55,11 @@ public class BluetoothSerialService {
 
         // Member fields
         private final BluetoothAdapter mAdapter;
-        //private final Handler mHandler;
         private ConnectThread mConnectThread;
         private ConnectedThread mConnectedThread;
         private int mState;
 
         private boolean mAllowInsecureConnections;
-
-        //private EmulatorView mEmulatorView;
-        private Context mContext;
 
         // Constants that indicate the current connection state
         public static final int STATE_NONE = 0;       // we're doing nothing
@@ -73,15 +69,10 @@ public class BluetoothSerialService {
 
         /**
          * Constructor. Prepares a new BluetoothChat session.
-         * @param context  The UI Activity Context
-         * /@param handler  A Handler to send messages back to the UI Activity
          */
-        public BluetoothSerialService(Context context) {
+        public BluetoothSerialService() {
             mAdapter = BluetoothAdapter.getDefaultAdapter();
             mState = STATE_NONE;
-            //mHandler = handler;
-            //mEmulatorView = emulatorView;
-            mContext = context;
             mAllowInsecureConnections = true;
         }
 
@@ -95,33 +86,6 @@ public class BluetoothSerialService {
 
             // Give the new state to the Handler so the UI Activity can update
             //mHandler.obtainMessage(BlueTerm.MESSAGE_STATE_CHANGE, state, -1).sendToTarget();
-        }
-
-        /**
-         * Return the current connection state. */
-        public synchronized int getState() {
-            return mState;
-        }
-
-        /**
-         * Start the chat service. Specifically start AcceptThread to begin a
-         * session in listening (server) mode. Called by the Activity onResume() */
-        public synchronized void start() {
-            if (D) Log.d(TAG, "start");
-
-            // Cancel any thread attempting to make a connection
-            if (mConnectThread != null) {
-                mConnectThread.cancel();
-                mConnectThread = null;
-            }
-
-            // Cancel any thread currently running a connection
-            if (mConnectedThread != null) {
-                mConnectedThread.cancel();
-                mConnectedThread = null;
-            }
-
-            setState(STATE_NONE);
         }
 
         /**
@@ -149,6 +113,7 @@ public class BluetoothSerialService {
          * Start the ConnectedThread to begin managing a Bluetooth connection
          * @param socket  The BluetoothSocket on which the connection was made
          * @param device  The BluetoothDevice that has been connected
+         * @param drawingReader The DrawingReader containing the drawing to be sent
          */
         public synchronized void connected(BluetoothSocket socket, BluetoothDevice device, DrawingReader drawingReader) {
             if (D) Log.d(TAG, "connected");
@@ -168,13 +133,6 @@ public class BluetoothSerialService {
             // Start the thread to manage the connection and perform transmissions
             mConnectedThread = new ConnectedThread(socket, drawingReader);
             mConnectedThread.start();
-
-            // Send the name of the connected device back to the UI Activity
-            /*Message msg = mHandler.obtainMessage(BlueTerm.MESSAGE_DEVICE_NAME);
-            Bundle bundle = new Bundle();
-            bundle.putString(BlueTerm.DEVICE_NAME, device.getName());
-            msg.setData(bundle);
-            mHandler.sendMessage(msg);*/
 
             setState(STATE_CONNECTED);
         }
@@ -200,34 +158,10 @@ public class BluetoothSerialService {
         }
 
         /**
-         * Write to the ConnectedThread in an unsynchronized manner
-         * @param out The bytes to write
-         * @see ConnectedThread#write(byte[])
-         */
-        public void write(byte[] out) {
-            // Create temporary object
-            ConnectedThread r;
-            // Synchronize a copy of the ConnectedThread
-            synchronized (this) {
-                if (mState != STATE_CONNECTED) return;
-                r = mConnectedThread;
-            }
-            // Perform the write unsynchronized
-            r.write(out);
-        }
-
-        /**
          * Indicate that the connection attempt failed and notify the UI Activity.
          */
         private void connectionFailed() {
             setState(STATE_NONE);
-
-            // Send a failure message back to the Activity
-            /*Message msg = mHandler.obtainMessage(BlueTerm.MESSAGE_TOAST);
-            Bundle bundle = new Bundle();
-            bundle.putString(BlueTerm.TOAST, mContext.getString(R.string.toast_unable_to_connect) );
-            msg.setData(bundle);
-            mHandler.sendMessage(msg);*/
         }
 
         /**
@@ -235,13 +169,6 @@ public class BluetoothSerialService {
          */
         private void connectionLost() {
             setState(STATE_NONE);
-
-            // Send a failure message back to the Activity
-            /*Message msg = mHandler.obtainMessage(BlueTerm.MESSAGE_TOAST);
-            Bundle bundle = new Bundle();
-            bundle.putString(BlueTerm.TOAST, mContext.getString(R.string.toast_connection_lost) );
-            msg.setData(bundle);
-            mHandler.sendMessage(msg);*/
         }
 
         /**
@@ -356,55 +283,40 @@ public class BluetoothSerialService {
                 PrintWriter printWriter = new PrintWriter(mmOutStream);
                 Scanner scanner = new Scanner(mmInStream);
                 int bytes;
-                String moreString = "Meer instructies, alsjeblieft\r";
+                String moreString = "Meer instructies, alsjeblieft";
                 String nextMove = null;
+                String test = null;
 
                 // Keep listening to the InputStream while connected
                 while (true) {
+
                     try {
-                        //ToDo: Uncomment this
-                        /*for(int i = 0; i<128; i++){
+                        Thread.sleep(4000);
+                        for(int i = 0; i<128; i++){
                             nextMove = drawingReader.nextMove();
-                            if(nextMove == null) {
-                                cancel();
-                                Log.d(TAG, "Finished sending, ending connection...");
-                                throw new IOException(); //Throws an exception to close the Thread as it's finsished sending
+                            if(nextMove!=null){
+                                Log.d(TAG, nextMove);
                             }
-                            printWriter.println(drawingReader.nextMove());
-                        }*/
-                        mmOutStream.write("Send\r\n".getBytes());
+                            if(nextMove == null) {
+                                break;
+                            }
+                            mmOutStream.write((nextMove + "\r").getBytes());
+                        }
                         // Read from the InputStream
                         while(true){
                             if(scanner.hasNextLine()){
-                                if(scanner.nextLine().equals(moreString)){
+                                test =  scanner.nextLine();
+                                if(test.equals(moreString)){
+                                    Log.d(TAG,test);
                                     break;
                                 }
                             }
                         }
-                        //mEmulatorView.write(buffer, bytes);
-                        // Send the obtained bytes to the UI Activity
-                        //mHandler.obtainMessage(BlueTerm.MESSAGE_READ, bytes, -1, buffer).sendToTarget();
-                    } catch (IOException e) {
+                    } catch (Exception e) {
                         Log.e(TAG, "disconnected", e);
                         connectionLost();
                         break;
                     }
-                }
-            }
-
-            /**
-             * Write to the connected OutStream.
-             * @param buffer  The bytes to write
-             */
-            public void write(byte[] buffer) {
-                try {
-                    mmOutStream.write(buffer);
-
-                    // Share the sent message back to the UI Activity
-                    //mHandler.obtainMessage(BlueTerm.MESSAGE_WRITE, buffer.length, -1, buffer)
-                    //        .sendToTarget();
-                } catch (IOException e) {
-                    Log.e(TAG, "Exception during write", e);
                 }
             }
 
@@ -415,14 +327,6 @@ public class BluetoothSerialService {
                     Log.e(TAG, "close() of connect socket failed", e);
                 }
             }
-        }
-
-        public void setAllowInsecureConnections( boolean allowInsecureConnections ) {
-            mAllowInsecureConnections = allowInsecureConnections;
-        }
-
-        public boolean getAllowInsecureConnections() {
-            return mAllowInsecureConnections;
         }
 
 }

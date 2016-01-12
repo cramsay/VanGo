@@ -1,5 +1,7 @@
 package com.example.adam.vangodrawer.Drawing;
 
+import android.util.Log;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -8,10 +10,11 @@ import java.util.List;
  */
 public class FullLine {
 
+    final String TAG = "FullLine";
     private List<LineSegment> line;
-    private float startX, startY, currentX, currentY;
+    private int startX, startY, currentX, currentY;
 
-    public FullLine(float startX, float startY){
+    public FullLine(int startX, int startY){
         line = new ArrayList<LineSegment>();
         this.startX = startX;
         this.startY = startY;
@@ -19,8 +22,8 @@ public class FullLine {
         currentY = startY;
     }
 
-    public void addSegmentTo(float x, float y){
-        line.add(new LineSegment(currentX, x, currentY, y));
+    public void addSegmentTo(int x, int y){
+        line.add(new LineSegment(currentX, currentY, x, y));
         currentX = x;
         currentY = y;
     }
@@ -29,15 +32,15 @@ public class FullLine {
         return new ArrayList<LineSegment>(line);
     }
 
-    public float getStartX(){
+    public int getStartX(){
         return startX;
     }
 
-    public float getStartY(){
+    public int getStartY(){
         return startY;
     }
 
     public boolean isDot(){
-        return !line.isEmpty();
+        return line.isEmpty();
     }
 }
