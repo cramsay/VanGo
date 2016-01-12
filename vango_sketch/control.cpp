@@ -131,6 +131,7 @@ void ctrlToNextCoord(WheelPos *nextCoord){
   return 1;
  }
 
+
  /* void updateIdealSpeeds()
   *   Calculates the ideal speeds we should be driving at
   *   to reach the target. If any speed is found to be
@@ -138,29 +139,27 @@ void ctrlToNextCoord(WheelPos *nextCoord){
   *   be in rage.
   */
  void updateIdealSpeeds(){
-  int i;
-  float highest;
-  float scaleFactor = 1;
-
-  //Keep looping until all speeds are sensible
-  do{
-
-    //Reset highest counter
+    int i;
+    float highest;
+    float scaleFactor = 1;
     highest = 0;
-
-    //Find ideal speed and check if this is a new highest
+    //Find the biggest speed.
     for(i=0;i<NUM_MOTORS;i++){
-      motors[i].idealSpeed = (motors[i].targetPos - motors[i].startPos) * scaleFactor;
-      
-      if(abs(motors[i].idealSpeed) > highest)
-        highest = abs(motors[i].idealSpeed);
-        
+      motors[i].idealSpeed = (motors[i].targetPos - motors[i].startPos);
+      if(abs(motors[i].idealSpeed) > highest){
+        highest = abs(motors[i].idealSpeed);  
+      }
     }
-
-    //Speculatively calculate scaling factor for next pass
-    scaleFactor = SPEED_LIMIT/highest;
-  }while(highest>SPEED_LIMIT);
-  
+    /**
+     * If the biggest speed is higher than the speed limit. Scale all
+     * down by a common factor so they are all less than the speed limit.
+     */
+    if(highest>SPEED_LIMIT){
+      scaleFactor = SPEED_LIMIT/highest;
+      for(i=0;i<NUM_MOTORS;i++){
+        motors[i].idealSpeed=motors[i].idealSpeed*scaleFactor;
+      }
+    }
  }
  
 /* void applyBiasedSpeeds()
@@ -183,12 +182,12 @@ void ctrlToNextCoord(WheelPos *nextCoord){
     
     // Apply bias and clip at speed limit
     motors[i].biasedSpeed = motors[i].idealSpeed + motors[i].bias[biasIndex];
-    motors[i].biasedSpeed = constrain(motors[i].biasedSpeed,-SPEED_LIMIT,SPEED_LIMIT);
+    motors[i].biasedSpeed = constrain(motors[i].biasedSpeed,-MAX_POS_SPEED,MAX_POS_SPEED);
     
     // Set PWM values
-    motors[i].motor->setSpeed((int) (abs(motors[i].biasedSpeed)*PWM_SPEED_FACTOR));
+    motors[i].motor->setSpeed((int) ((abs(motors[i].biasedSpeed)/MAX_POS_SPEED)*MAX_MOTOR_SETTING));
 
-    Serial1.println((int) (abs(motors[i].biasedSpeed)*PWM_SPEED_FACTOR));
+    Serial1.println((int) ((abs(motors[i].biasedSpeed)/MAX_POS_SPEED)*MAX_MOTOR_SETTING));
   }
  }
 
@@ -213,11 +212,15 @@ void ctrlToNextCoord(WheelPos *nextCoord){
     //Calculate real speed
     actualSpeed = motors[i].endPos - motors[i].startPos;
   
-    //Only keep difference as bias
+    /*
+     * This difference is then added to the bias as the
+     * bias would have been used to produce this speed
+     * and has now been proven to be off this amount.
+     */
     if(motors[i].idealSpeed > 0)
       biasIndex = BIAS_FORWARD;
     else
       biasIndex = BIAS_BACKWARD;
-    motors[i].bias[biasIndex] = motors[i].idealSpeed - actualSpeed;
+    motors[i].bias[biasIndex] += (motors[i].idealSpeed - actualSpeed);
   }
  }

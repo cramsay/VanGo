@@ -9,7 +9,8 @@
 #define ACCURACY_LIMIT    2 // Resolution for "good enough" position
 #define SPEED_LIMIT       7 // Max assignable speed
 #define TIME_UNIT_MS      1 // Time in ms between control loop iterations
-#define PWM_SPEED_FACTOR  6 // Scaling factor for our units and motor PWM values
+#define MAX_POS_SPEED 42 //The maximum speed the wheel could possibly turn at.
+#define MAX_MOTOR_SETTING 255 //The maximum value the motor can be set to
 
 /* comsInit:
  *  Must be called before any other control functions
