@@ -31,6 +31,7 @@
 
 void comsInit(void) {
 	Serial1.begin(115200);
+  Serial.setTimeout(10000);
 }
 
 void comsGetNextInstr(WheelPos *pos, int *penDown) {
@@ -41,7 +42,6 @@ void comsGetNextInstr(WheelPos *pos, int *penDown) {
 	while(Serial1.available()==0)
 		delay(50);
 
-  //TODO Remove timeout in parseInt
   //Parse packet
 	pos->x1 = Serial1.parseInt();
 	pos->y1 = Serial1.parseInt();
