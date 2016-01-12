@@ -21,6 +21,12 @@ typedef struct WheelPos{
   int y2;
 } WheelPos;
 
+/* Constants for mapping wheel indecies to logical names
+ */
+#define X1 0
+#define Y1 1
+#define X2 2
+#define Y2 3
 
 /* trackInit:
  *  Must be called before any other wheel tracking features

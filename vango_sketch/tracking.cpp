@@ -52,11 +52,6 @@
 #define NUM_IR 4  // Number of attached IR sensors
 #define NUM_IR_IC 2  // Number of attached IR sensors via input capture
 
-#define X1 0
-#define Y1 1
-#define X2 2
-#define Y2 3
-
 #define IS_X(i) ((i)%2)==0
 #define IS_Y(i) !IS_X(i)
 
