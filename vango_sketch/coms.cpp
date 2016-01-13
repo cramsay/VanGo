@@ -30,26 +30,26 @@
  **********************************************************************/
 
 void comsInit(void) {
-	Serial1.begin(115200);
+	Serial2.begin(115200);
   Serial.setTimeout(10000);
 }
 
 void comsGetNextInstr(WheelPos *pos, int *penDown) {
 
   //If no packets are buffered, ask for some and wait
-	if(Serial1.available()==0)
-		Serial1.println("Meer instructies, alsjeblieft");
-	while(Serial1.available()==0)
+	if(Serial2.available()==0)
+		Serial2.println("Meer instructies, alsjeblieft");
+	while(Serial2.available()==0)
 		delay(50);
 
   //Parse packet
-	pos->x1 = Serial1.parseInt();
-	pos->y1 = Serial1.parseInt();
-	*penDown = Serial1.parseInt();
+	pos->x1 = Serial2.parseInt();
+	pos->y1 = Serial2.parseInt();
+	*penDown = Serial2.parseInt();
 	pos->x2 = pos->x1; 
 	pos->y2 = pos->y1; 
 
   //Consume trailing chars
-  while(!isdigit(Serial1.peek()) && Serial1.available()>0)
-    Serial1.read();
+  while(!isdigit(Serial2.peek()) && Serial2.available()>0)
+    Serial2.read();
 }

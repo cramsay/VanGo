@@ -77,24 +77,23 @@ void ctrlToNextCoord(WheelPos *nextCoord){
   motors[X2].targetPos = nextCoord->x2;
   motors[Y2].targetPos = nextCoord->y2;
 
-  Serial1.println("Starting to hone in on new coord");
-  
+  Serial.println("Starting to hone in on new coord");
   //Loop while not at target
   while(!isAtTarget()){
     
     //Update ideal speeds
-    Serial1.println("Updating ideal speeds");
+    Serial2.println("Updating ideal speeds");
     updateIdealSpeeds();
   
     //Drive motors with biased speeds to compensate for reality
-    Serial1.println("Driving motors with biased speeds");
+    Serial2.println("Driving motors with biased speeds");
     applyBiasedSpeeds();
     
     //Wait for some movement
     delay(TIME_UNIT_MS);
     
     //Update the biases
-    Serial1.println("Updating biases");
+    Serial2.println("Updating biases");
     updateBiases();
     
   }
@@ -125,11 +124,11 @@ void ctrlToNextCoord(WheelPos *nextCoord){
   motors[X2].startPos = curs.x2;
   motors[Y2].startPos = curs.y2;
 
-  Serial1.print("Current positions = ");
-  Serial1.print(curs.x1);Serial1.print(", ");
-  Serial1.print(curs.y1);Serial1.print(", ");
-  Serial1.print(curs.x2);Serial1.print(", ");
-  Serial1.println(curs.y2);;
+  Serial2.print("Current positions = ");
+  Serial2.print(curs.x1);Serial2.print(", ");
+  Serial2.print(curs.y1);Serial2.print(", ");
+  Serial2.print(curs.x2);Serial2.print(", ");
+  Serial2.println(curs.y2);;
   
   //Compare actual and target positions on all motors
   for(i=0;i<NUM_MOTORS;i++){
@@ -211,22 +210,22 @@ void ctrlToNextCoord(WheelPos *nextCoord){
     // Set PWM values
     motors[i].motor->setSpeed((int) ((abs(motors[i].biasedSpeed)/MAX_POS_SPEED)*MAX_MOTOR_SETTING));
 
-    Serial1.print("Ideal speed for motor ");
-    Serial1.print(i);
-    Serial1.print(" = ");
-    Serial1.println((int)motors[i].idealSpeed);
+    Serial2.print("Ideal speed for motor ");
+    Serial2.print(i);
+    Serial2.print(" = ");
+    Serial2.println((int)motors[i].idealSpeed);
 
-    Serial1.print("Biases for motors ");
-    Serial1.print(i);
-    Serial1.print(" = ");
-    Serial1.print((int)motors[i].bias[0]);
-    Serial1.print(", ");
-    Serial1.println((int)motors[i].bias[1]);
+    Serial2.print("Biases for motors ");
+    Serial2.print(i);
+    Serial2.print(" = ");
+    Serial2.print((int)motors[i].bias[0]);
+    Serial2.print(", ");
+    Serial2.println((int)motors[i].bias[1]);
     
-    Serial1.print("PWM value for motor ");
-    Serial1.print(i);
-    Serial1.print(" = ");
-    Serial1.println((int) ((abs(motors[i].biasedSpeed)/MAX_POS_SPEED)*MAX_MOTOR_SETTING));
+    Serial2.print("PWM value for motor ");
+    Serial2.print(i);
+    Serial2.print(" = ");
+    Serial2.println((int) ((abs(motors[i].biasedSpeed)/MAX_POS_SPEED)*MAX_MOTOR_SETTING));
     
   }
  }
@@ -252,10 +251,10 @@ void ctrlToNextCoord(WheelPos *nextCoord){
     //Calculate real speed
     actualSpeed = motors[i].endPos - motors[i].startPos;
     
-    Serial1.print("Measured speed for motor ");
-    Serial1.print(i);
-    Serial1.print(" = ");
-    Serial1.println(actualSpeed);
+    Serial2.print("Measured speed for motor ");
+    Serial2.print(i);
+    Serial2.print(" = ");
+    Serial2.println(actualSpeed);
   
     /*
      * This difference is then added to the bias as the
