@@ -291,8 +291,8 @@ public class BluetoothSerialService {
                 while (true) {
 
                     try {
-                        Thread.sleep(4000);
-                        for(int i = 0; i<128; i++){
+                        Thread.sleep(2000);
+                        for(int i = 0; i<3; i++){
                             nextMove = drawingReader.nextMove();
                             if(nextMove!=null){
                                 Log.d(TAG, nextMove);
@@ -300,7 +300,7 @@ public class BluetoothSerialService {
                             if(nextMove == null) {
                                 break;
                             }
-                            mmOutStream.write((nextMove + "\r").getBytes());
+                            mmOutStream.write((nextMove + "\n").getBytes());
                         }
                         // Read from the InputStream
                         while(true){
