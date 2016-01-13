@@ -50,7 +50,7 @@
 #include "Arduino.h"
 
 #define NUM_IR 4  // Number of attached IR sensors
-#define NUM_IR_IC 2  // Number of attached IR sensors via input capture
+#define NUM_IR_IC 0  // Number of attached IR sensors via input capture
 
 #define IS_X(i) ((i)%2)==0
 #define IS_Y(i) !IS_X(i)
@@ -84,42 +84,38 @@ typedef struct
 
 /* Initialisation for IR sensor structs
  */
-WheelSensorIC ir_ic_y = {
-    {
-        .pin=49,
-        .dir=1,
-    },
-    .cfg_reg=&TCCR4B,
-    .int_reg=&TIMSK4,
-    .tmr_reg=&TCNT4,
-    .cnt_reg=&ICR4,
+WheelSensor ir_y1 = {
+    .pin=18,
+    .dir=1,
 };
-WheelSensorIC ir_ic_x = {
-    {
-        .pin=48,
-        .dir=1,
-    },
-    .cfg_reg=&TCCR5B,
-    .int_reg=&TIMSK5,
-    .tmr_reg=&TCNT5,
-    .cnt_reg=&ICR5,
+WheelSensor ir_x1 = {
+    .pin=19,
+    .dir=1,
 };
-WheelSensor ir_x = {
+WheelSensor ir_x2 = {
     .pin=2,
     .dir=1,
 };
-WheelSensor ir_y = {
+WheelSensor ir_y2 = {
     .pin=3,
     .dir=1,
 };
 
-WheelSensor* all_ir[] = {(WheelSensor*)&ir_ic_x, (WheelSensor*)&ir_ic_y, &ir_x, &ir_y};
-WheelSensorIC* ic_ir[] = {&ir_ic_x, &ir_ic_y};
+WheelSensor* all_ir[] = {&ir_x1, &ir_y1, &ir_x2, &ir_y2};
+WheelSensorIC* ic_ir[] = {};  /* In final version, the motor control
+                               *  doesn't actually use input capture speed
+                               *  measurements so we have settled with using
+                               *  only interrupt based approaches for sake of
+                               *  consistency
+                               */
 
 /* Required prototypes
  */
-void int_sensor_tick_X();
-void int_sensor_tick_Y();
+void int_sensor_tick_X1();
+void int_sensor_tick_Y1();
+void int_sensor_tick_X2();
+void int_sensor_tick_Y2();
+
 
 
 /* Public functions ***************************************************
@@ -130,20 +126,25 @@ void trackInit(void) {
 
     // Initialise all IC sensors
     for(i=0; i<NUM_IR_IC; i++) {
-        *(ic_ir[i]->cfg_reg) = _BV(CS12)  // Set clock divider to 1024
+        *(ic_ir[i]->cfg_reg) = _BV(CS12)    // Set clock divider to 1024
                                | _BV(CS10)
                                | _BV(ICNC1) // Enable noise canceller
                                | _BV(ICES1);// Enable input capture
 
-        *(ic_ir[i]->int_reg) = _BV(ICIE1) // Enable capture IRQ
+        *(ic_ir[i]->int_reg) = _BV(ICIE1)   // Enable capture IRQ
                                | _BV(TOIE1);// Enable overflow IRQ
     }
 
+
     // Initialise all IN sensors
+    pinMode(all_ir[X1]->pin, INPUT);
+    attachInterrupt(digitalPinToInterrupt(all_ir[X1]->pin), int_sensor_tick_X1, RISING);
+    pinMode(all_ir[Y1]->pin, INPUT);
+    attachInterrupt(digitalPinToInterrupt(all_ir[Y1]->pin), int_sensor_tick_Y1, RISING);
     pinMode(all_ir[X2]->pin, INPUT);
-    attachInterrupt(digitalPinToInterrupt(all_ir[X2]->pin), int_sensor_tick_X, RISING);
+    attachInterrupt(digitalPinToInterrupt(all_ir[X2]->pin), int_sensor_tick_X2, RISING);
     pinMode(all_ir[Y2]->pin, INPUT);
-    attachInterrupt(digitalPinToInterrupt(all_ir[Y2]->pin), int_sensor_tick_Y, RISING);
+    attachInterrupt(digitalPinToInterrupt(all_ir[Y2]->pin), int_sensor_tick_Y2, RISING);
 }
 
 
@@ -222,9 +223,15 @@ ISR(TIMER4_CAPT_vect) {
 ISR(TIMER5_CAPT_vect) {
     timer_capture(Y1);
 }
-void int_sensor_tick_X() {
+void int_sensor_tick_X1() {
+    int_sensor_tick(X1);
+}
+void int_sensor_tick_Y1() {
+    int_sensor_tick(Y1);
+}
+void int_sensor_tick_X2() {
     int_sensor_tick(X2);
 }
-void int_sensor_tick_Y() {
+void int_sensor_tick_Y2() {
     int_sensor_tick(Y2);
 }
