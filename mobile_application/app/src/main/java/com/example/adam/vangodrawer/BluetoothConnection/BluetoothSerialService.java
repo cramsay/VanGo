@@ -292,7 +292,7 @@ public class BluetoothSerialService {
 
                     try {
                         Thread.sleep(2000);
-                        for(int i = 0; i<3; i++){
+                        for(int i = 0; i<128; i++){
                             nextMove = drawingReader.nextMove();
                             if(nextMove!=null){
                                 Log.d(TAG, nextMove);
@@ -313,7 +313,14 @@ public class BluetoothSerialService {
                             }
                         }
                     } catch (Exception e) {
+                        try {
+                            mmInStream.close();
+                            mmOutStream.close();
+                        }catch (Exception e1){
+
+                        }
                         Log.e(TAG, "disconnected", e);
+
                         connectionLost();
                         break;
                     }
